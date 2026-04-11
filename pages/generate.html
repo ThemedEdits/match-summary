@@ -7,122 +7,145 @@
   <link rel="stylesheet" href="../css/dashboard.css" />
   <link rel="stylesheet" href="../css/generate.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=Teko:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Teko:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 </head>
 <body>
   <nav class="navbar">
-    <div class="nav-brand">🏏 <span>CricSnap</span></div>
+    <div class="nav-brand">
+      <i data-lucide="activity"></i>
+      <span>CricSnap</span>
+    </div>
     <div class="nav-links">
-      <a href="dashboard.html" class="nav-link">Dashboard</a>
-      <a href="templates.html" class="nav-link">Templates</a>
-      <a href="generate.html" class="nav-link active">Generate</a>
+      <a href="dashboard.html" class="nav-link"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+      <a href="templates.html" class="nav-link"><i data-lucide="layout-template"></i> Templates</a>
+      <a href="generate.html" class="nav-link active"><i data-lucide="sparkles"></i> Generate</a>
     </div>
     <div class="nav-user">
       <span id="userNameDisplay"></span>
-      <button class="btn-logout" onclick="logoutUser()">Sign Out</button>
+      <button class="btn-logout" onclick="logoutUser()"><i data-lucide="log-out"></i> Sign Out</button>
     </div>
   </nav>
 
   <main class="page-main">
-    <div class="page-header">
+    <div class="page-header reveal">
       <div>
         <h1>Generate Summary</h1>
-        <p>Upload a scorecard screenshot — AI will extract all match data automatically</p>
+        <p>Upload a scorecard screenshot — AI extracts all match data automatically</p>
       </div>
     </div>
 
-    <!-- Step 1: Upload -->
     <div class="gen-steps">
-      <div class="step-card" id="step1Card">
+
+      <!-- Step 1 -->
+      <div class="step-card reveal" id="step1Card" style="--delay:0.05s">
         <div class="step-num">1</div>
         <div class="step-body">
           <h3>Upload Scorecard Screenshot</h3>
-          <p>Take a full-page screenshot of any CricHeroes (or similar) scorecard</p>
-
+          <p>Full-page screenshot of any CricHeroes scorecard</p>
           <div class="upload-zone" id="scorecardUploadZone" onclick="document.getElementById('scorecardInput').click()">
-            <input type="file" id="scorecardInput" accept="image/*" style="display:none" onchange="handleScorecardUpload(event)" />
-            <div class="upload-icon">📸</div>
-            <p>Click to upload or drag & drop</p>
-            <small>PNG, JPG, WEBP supported</small>
+            <input type="file" id="scorecardInput" accept="image/*" style="display:none" />
+            <div class="upload-zone-inner">
+              <div class="upload-icon-wrap"><i data-lucide="image-up"></i></div>
+              <p>Click to upload or drag &amp; drop</p>
+              <small>PNG, JPG, WEBP supported</small>
+            </div>
           </div>
-
           <img id="scorecardPreview" class="hidden scorecard-preview" />
-
-          <button class="btn-primary" id="analyzeBtn" onclick="analyzeScorecard()" disabled style="margin-top:16px">
-            🔍 Analyze with AI
+          <button class="btn-primary" id="analyzeBtn" onclick="analyzeScorecard()" disabled>
+            <i data-lucide="scan-search"></i> Analyze with AI
           </button>
         </div>
       </div>
 
-      <!-- Step 2: Extracted Data -->
+      <!-- Step 2 -->
       <div class="step-card hidden" id="step2Card">
         <div class="step-num">2</div>
         <div class="step-body">
           <h3>Extracted Match Data</h3>
-          <p>Review and edit the extracted data before generating your summary</p>
-
-          <div id="extractedDataForm" class="data-form">
-            <!-- Injected by JS -->
-          </div>
-
-          <button class="btn-primary" onclick="proceedToTemplate()" style="margin-top:20px">
-            Continue to Template →
+          <p>Review and edit before generating your summary card</p>
+          <div id="scorecardSummary" class="scorecard-summary"></div>
+          <details class="edit-details">
+            <summary><i data-lucide="pencil"></i> Edit raw fields</summary>
+            <div id="extractedDataForm" class="data-form"></div>
+          </details>
+          <button class="btn-primary" onclick="proceedToTemplate()">
+            Continue to Template <i data-lucide="arrow-right"></i>
           </button>
         </div>
       </div>
 
-      <!-- Step 3: Template Selection -->
+      <!-- Step 3 -->
       <div class="step-card hidden" id="step3Card">
         <div class="step-num">3</div>
         <div class="step-body">
           <h3>Select a Template</h3>
-          <p>Choose a background template for your summary graphic</p>
-
+          <p>Choose a background for your summary graphic</p>
           <div id="templateSelectGrid" class="template-select-grid">
-            <div class="loading-templates">Loading templates...</div>
+            <div class="loading-templates"><i data-lucide="loader-2" class="spin"></i> Loading...</div>
           </div>
-
-          <!-- No-template option -->
           <div class="no-template-opt">
-            <input type="radio" name="templateChoice" id="noTemplateOpt" value="none" onchange="selectTemplate(null)" />
-            <label for="noTemplateOpt">No template — plain summary card</label>
+            <input type="radio" name="templateChoice" id="noTemplateOpt" value="none" />
+            <label for="noTemplateOpt"><i data-lucide="layout"></i> No template — plain summary card</label>
           </div>
-
-          <button class="btn-primary" onclick="generateFinal()" id="generateFinalBtn" disabled style="margin-top:20px">
-            ✨ Generate Final Card
+          <button class="btn-primary" onclick="generateFinal()" id="generateFinalBtn" disabled>
+            <i data-lucide="sparkles"></i> Generate Final Card
           </button>
         </div>
       </div>
 
-      <!-- Step 4: Preview & Download -->
+      <!-- Step 4 -->
       <div class="step-card hidden" id="step4Card">
         <div class="step-num">4</div>
         <div class="step-body">
-          <h3>Preview & Download</h3>
+          <h3>Preview &amp; Download</h3>
           <p>Your match summary card is ready!</p>
-
           <div class="preview-wrap">
             <canvas id="previewCanvas"></canvas>
           </div>
-
           <div class="download-actions">
-            <button class="btn-primary" onclick="downloadCard()">⬇ Download PNG</button>
-            <button class="btn-secondary" onclick="resetGenerator()">Generate Another</button>
+            <button class="btn-primary" onclick="downloadCard()"><i data-lucide="download"></i> Download PNG</button>
+            <button class="btn-secondary" onclick="resetGenerator()"><i data-lucide="refresh-cw"></i> Generate Another</button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- AI Loader -->
+    <!-- Skeleton AI Loader -->
     <div id="aiLoader" class="ai-loader hidden">
-      <div class="loader-content">
-        <div class="loader-spinner"></div>
-        <h3>AI is analyzing the scorecard...</h3>
-        <p id="loaderStatus">Reading batting stats...</p>
+      <div class="loader-backdrop"></div>
+      <div class="loader-panel">
+        <div class="loader-header">
+          <div class="loader-icon-wrap"><i data-lucide="scan-search"></i></div>
+          <div>
+            <h3>Analyzing Scorecard</h3>
+            <p id="loaderStatus">Reading match data...</p>
+          </div>
+        </div>
+        <div class="skeleton-card">
+          <div class="skel-row"><div class="skel w-60"></div><div class="skel w-20"></div></div>
+          <div class="skel-divider"></div>
+          <div class="skel-team-header"><div class="skel w-40"></div><div class="skel w-15"></div><div class="skel w-15"></div></div>
+          <div class="skel-row"><div class="skel w-50"></div><div class="skel w-10"></div><div class="skel w-10"></div></div>
+          <div class="skel-row"><div class="skel w-45"></div><div class="skel w-10"></div><div class="skel w-10"></div></div>
+          <div class="skel-row"><div class="skel w-50"></div><div class="skel w-10"></div><div class="skel w-10"></div></div>
+          <div class="skel-divider"></div>
+          <div class="skel-team-header"><div class="skel w-40"></div><div class="skel w-15"></div><div class="skel w-15"></div></div>
+          <div class="skel-row"><div class="skel w-50"></div><div class="skel w-10"></div><div class="skel w-10"></div></div>
+          <div class="skel-row"><div class="skel w-45"></div><div class="skel w-10"></div><div class="skel w-10"></div></div>
+          <div class="skel-divider"></div>
+          <div class="skel-row"><div class="skel w-70"></div></div>
+        </div>
+        <div class="loader-steps">
+          <div class="loader-step active" id="lstep1"><i data-lucide="image"></i> Reading image</div>
+          <div class="loader-step" id="lstep2"><i data-lucide="brain"></i> AI processing</div>
+          <div class="loader-step" id="lstep3"><i data-lucide="table-2"></i> Parsing data</div>
+        </div>
       </div>
     </div>
   </main>
 
+  <script>document.addEventListener('DOMContentLoaded', () => lucide.createIcons());</script>
   <script type="module" src="../js/generate.js"></script>
 </body>
 </html>

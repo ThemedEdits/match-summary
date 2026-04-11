@@ -293,3 +293,24 @@ body {
 
 /* ===== HIDDEN ===== */
 .hidden { display: none !important; }
+
+/* ===== REVEAL ANIMATION ===== */
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  animation: revealUp 0.5s ease forwards;
+  animation-delay: var(--delay, 0s);
+}
+@keyframes revealUp {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== ICON ALIGNMENT IN NAV ===== */
+.nav-brand { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+.nav-brand svg { width: 20px; height: 20px; color: var(--accent); }
+.nav-link { display: flex; align-items: center; gap: 5px; }
+.nav-link svg { width: 14px; height: 14px; }
+.btn-logout { display: flex; align-items: center; gap: 6px; }
+.btn-logout svg { width: 14px; height: 14px; }
+.btn-primary svg, .btn-secondary svg { width: 15px; height: 15px; }
+.btn-sm svg { width: 13px; height: 13px; }

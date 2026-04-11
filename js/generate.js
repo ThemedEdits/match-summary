@@ -4,19 +4,26 @@ import { uploadCanvasToCloudinary } from './cloudinary.js';
 import {
   collection, addDoc, getDocs, query, where
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { showToast, showAlert } from './popup.js';
 
-// =================== ANTHROPIC CONFIG ===================
-// Option A (Recommended / Production):
-//   Deploy to Vercel and set ANTHROPIC_API_KEY as an environment variable.
-//   The /api/analyze.js serverless function will proxy the request securely.
-//   Set USE_PROXY = true below.
+// =================== OPENROUTER CONFIG ===================
+// OpenRouter is FREE — no credit card needed.
+// Free models include Gemini 2.0 Flash, Llama, Mistral and more.
 //
-// Option B (Local testing only):
-//   Paste your key directly. Never commit this to Git.
-//   Set USE_PROXY = false and fill in ANTHROPIC_API_KEY.
+// HOW TO GET YOUR FREE KEY (2 minutes):
+//   1. Go to https://openrouter.ai
+//   2. Sign up with Google or GitHub (free)
+//   3. Go to https://openrouter.ai/keys → Click "Create Key"
+//   4. Copy the key (looks like: sk-or-v1-...)
+//
+// Option A (Recommended / Production — key stays secret on Vercel):
+//   Set USE_PROXY = true and add OPENROUTER_API_KEY as a Vercel env variable.
+//
+// Option B (Local Live Server testing):
+//   Set USE_PROXY = false and paste your key below.
 
 const USE_PROXY = true; // true = use /api/analyze (Vercel), false = direct browser call
-const ANTHROPIC_API_KEY = 'YOUR_ANTHROPIC_API_KEY'; // only needed if USE_PROXY = false
+const OPENROUTER_API_KEY = 'none'; // get free key at openrouter.ai
 
 let currentUser = null;
 let scorecardFile = null;
@@ -39,25 +46,35 @@ window.handleScorecardUpload = function (e) {
   preview.src = url;
   preview.classList.remove('hidden');
 
-  // Update upload zone
+  // Hide upload zone and show preview
   const zone = document.getElementById('scorecardUploadZone');
-  zone.querySelector('p').textContent = file.name;
-  zone.querySelector('small').textContent = `${(file.size / 1024).toFixed(1)} KB`;
+  zone.style.display = 'none';
 
   document.getElementById('analyzeBtn').disabled = false;
 };
 
+// Attach file input change listener (module-safe, no inline onchange needed)
+const _scorecardInput = document.getElementById('scorecardInput');
+if (_scorecardInput) {
+  _scorecardInput.addEventListener('change', (e) => window.handleScorecardUpload(e));
+}
+
+// Attach no-template radio listener
+const _noTemplateOpt = document.getElementById('noTemplateOpt');
+if (_noTemplateOpt) {
+  _noTemplateOpt.addEventListener('change', () => window.selectTemplate(null));
+}
+
 // Drag and drop support
 const dropZone = document.getElementById('scorecardUploadZone');
 if (dropZone) {
-  dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.style.borderColor = 'var(--accent)'; });
-  dropZone.addEventListener('dragleave', () => { dropZone.style.borderColor = ''; });
+  dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('drag-over'); });
   dropZone.addEventListener('drop', (e) => {
     e.preventDefault();
-    dropZone.style.borderColor = '';
+    dropZone.classList.remove('drag-over');
     const file = e.dataTransfer.files[0];
     if (file && file.type.startsWith('image/')) {
-      document.getElementById('scorecardInput').files = e.dataTransfer.files;
       window.handleScorecardUpload({ target: { files: [file] } });
     }
   });
@@ -75,46 +92,46 @@ window.analyzeScorecard = async function () {
     const base64 = await fileToBase64(scorecardFile);
     const mimeType = scorecardFile.type || 'image/png';
 
-    updateLoaderStatus('Sending to Claude AI...');
+    updateLoaderStatus('Sending to Gemini AI...');
 
-    const prompt = `You are a cricket scorecard analyzer. Carefully read this scorecard image and extract ALL data. Return ONLY a valid JSON object with no extra text, no markdown, no backticks.
+    const prompt = `You are a cricket scorecard analyzer. Carefully read this scorecard image and extract ALL data. Return ONLY a valid JSON object with absolutely no extra text, no markdown, no backticks, no explanation.
 
-The JSON must follow this exact structure:
+The JSON must follow this exact structure (fill every field you can find, leave as empty string "" if not found):
 {
-  "match_title": "Series/League name and match",
+  "match_title": "Series/League name and match title",
   "match_date": "date string",
   "match_venue": "venue location",
   "match_result": "full result e.g. Sheheryar Sports won by 7 wickets",
-  "man_of_match": "player name (team)",
-  "toss_result": "who won toss and chose to do what",
-  "team1_name": "name of team that batted first",
+  "man_of_match": "player name and team",
+  "toss_result": "who won toss and elected to do what",
+  "team1_name": "name of team that batted FIRST",
   "team1_score": "runs/wickets e.g. 127/8",
   "team1_overs": "overs e.g. 20.0",
-  "team1_batter1_name": "top scorer name",
-  "team1_batter1_runs": "runs as number",
-  "team1_batter1_balls": "balls as number",
-  "team1_batter2_name": "",
+  "team1_batter1_name": "top run scorer name",
+  "team1_batter1_runs": "runs as number only",
+  "team1_batter1_balls": "balls faced as number only",
+  "team1_batter2_name": "2nd top run scorer",
   "team1_batter2_runs": "",
   "team1_batter2_balls": "",
-  "team1_batter3_name": "",
+  "team1_batter3_name": "3rd top run scorer",
   "team1_batter3_runs": "",
   "team1_batter3_balls": "",
-  "team1_bowler1_name": "best bowler for this team (most wickets, best economy)",
-  "team1_bowler1_wickets": "",
-  "team1_bowler1_runs": "",
-  "team1_bowler1_overs": "",
-  "team1_bowler2_name": "",
+  "team1_bowler1_name": "best bowler who bowled AGAINST team1 (most wickets)",
+  "team1_bowler1_wickets": "wickets as number only",
+  "team1_bowler1_runs": "runs conceded as number only",
+  "team1_bowler1_overs": "overs bowled",
+  "team1_bowler2_name": "2nd best bowler against team1",
   "team1_bowler2_wickets": "",
   "team1_bowler2_runs": "",
   "team1_bowler2_overs": "",
-  "team1_bowler3_name": "",
+  "team1_bowler3_name": "3rd best bowler against team1",
   "team1_bowler3_wickets": "",
   "team1_bowler3_runs": "",
   "team1_bowler3_overs": "",
-  "team2_name": "name of team that batted second",
-  "team2_score": "",
-  "team2_overs": "",
-  "team2_batter1_name": "",
+  "team2_name": "name of team that batted SECOND",
+  "team2_score": "runs/wickets",
+  "team2_overs": "overs",
+  "team2_batter1_name": "top run scorer",
   "team2_batter1_runs": "",
   "team2_batter1_balls": "",
   "team2_batter2_name": "",
@@ -123,7 +140,7 @@ The JSON must follow this exact structure:
   "team2_batter3_name": "",
   "team2_batter3_runs": "",
   "team2_batter3_balls": "",
-  "team2_bowler1_name": "",
+  "team2_bowler1_name": "best bowler who bowled AGAINST team2 (most wickets)",
   "team2_bowler1_wickets": "",
   "team2_bowler1_runs": "",
   "team2_bowler1_overs": "",
@@ -137,65 +154,72 @@ The JSON must follow this exact structure:
   "team2_bowler3_overs": ""
 }
 
-For top batters: sort by runs scored descending. Pick top 3.
-For top bowlers per team: these are the OPPONENT team's bowlers (bowlers who bowled AGAINST this team). Sort by wickets descending, then economy ascending. Pick top 3.
-Leave fields as empty string "" if not found.`;
+Rules:
+- Top batters: sort by runs descending, pick top 3 per team.
+- Top bowlers per team: pick from the OPPOSING team's bowling figures. Sort by wickets descending, then economy ascending.
+- Return ONLY the JSON. No text before or after.`;
 
-    updateLoaderStatus('Claude is reading batting stats...');
+    updateLoaderStatus('Detecting available Gemini model...');
 
-    const apiUrl = USE_PROXY ? '/api/analyze' : 'https://api.anthropic.com/v1/messages';
-    const apiHeaders = USE_PROXY
-      ? { 'Content-Type': 'application/json' }
-      : {
+    let rawText = '';
+
+    if (USE_PROXY) {
+      // Vercel proxy route
+      const response = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageBase64: base64, mimeType, prompt })
+      });
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || `Proxy error ${response.status}`);
+      }
+      const result = await response.json();
+      rawText = result.text || '{}';
+    } else {
+      // Direct OpenRouter call from browser (free, no CORS issues)
+      advanceLoaderStep(2); updateLoaderStatus('Analyzing scorecard with AI...');
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
           'Content-Type': 'application/json',
-          'x-api-key': ANTHROPIC_API_KEY,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true'
-        };
-
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: apiHeaders,
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 2000,
-        messages: [{
-          role: 'user',
-          content: [
-            {
-              type: 'image',
-              source: {
-                type: 'base64',
-                media_type: mimeType,
-                data: base64
-              }
-            },
-            { type: 'text', text: prompt }
-          ]
-        }]
-      })
-    });
-
-    if (!response.ok) {
-      const err = await response.json();
-      throw new Error(err.error?.message || `API error ${response.status}`);
+          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+          'HTTP-Referer': window.location.origin,
+          'X-Title': 'CricSnap'
+        },
+        body: JSON.stringify({
+          model: 'openrouter/auto',
+          messages: [{
+            role: 'user',
+            content: [
+              { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64}` } },
+              { type: 'text', text: prompt }
+            ]
+          }],
+          temperature: 0.1,
+          max_tokens: 2048
+        })
+      });
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error?.message || `OpenRouter error ${response.status}`);
+      }
+      const result = await response.json();
+      rawText = result.choices?.[0]?.message?.content || '{}';
     }
 
-    updateLoaderStatus('Parsing match data...');
+    advanceLoaderStep(3); updateLoaderStatus('Parsing match data...');
 
-    const result = await response.json();
-    const rawText = result.content?.[0]?.text || '{}';
-    // Strip any markdown if present
     const cleanText = rawText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
     extractedData = JSON.parse(cleanText);
 
     hideLoader();
+    buildScorecardSummary(extractedData);
     showExtractedDataForm(extractedData);
 
   } catch (e) {
     hideLoader();
-    alert('AI analysis failed: ' + e.message + '\n\nMake sure your Anthropic API key is set in js/generate.js');
-    console.error(e);
+    showToast(e.message, 'danger');
   }
 };
 
@@ -372,8 +396,7 @@ window.generateFinal = async function () {
     saveToHistory(canvas);
   } catch (e) {
     hideLoader();
-    alert('Generation failed: ' + e.message);
-    console.error(e);
+    showToast('Generation failed: ' + e.message, 'danger');
   }
 };
 
@@ -382,6 +405,20 @@ async function renderWithTemplate(canvas, ctx, template, data) {
   const natH = template.naturalHeight || 1080;
   canvas.width = natW;
   canvas.height = natH;
+
+  // Load any custom fonts stored with the template
+  if (template.customFonts && template.customFonts.length) {
+    for (const { name, dataUrl } of template.customFonts) {
+      try {
+        if (!document.fonts.check(`12px "${name}"`)) {
+          const ff = new FontFace(name, `url(${dataUrl})`);
+          await ff.load();
+          document.fonts.add(ff);
+        }
+      } catch(e) { console.warn('Font load failed:', name); }
+    }
+    await document.fonts.ready;
+  }
 
   // Draw background
   const bgImg = await loadImage(template.imageUrl);
@@ -397,7 +434,8 @@ async function renderWithTemplate(canvas, ctx, template, data) {
     const align = f.textAlign || 'center';
 
     ctx.save();
-    ctx.font = `${weight} ${fontSize}px "DM Sans", sans-serif`;
+    const family = f.fontFamily ? `"${f.fontFamily}"` : '"DM Sans", sans-serif';
+    ctx.font = `${weight} ${fontSize}px ${family}`;
     ctx.fillStyle = color;
     ctx.textAlign = align;
     ctx.textBaseline = 'middle';
@@ -655,7 +693,7 @@ async function saveToHistory(canvas) {
       createdAt: Date.now()
     });
   } catch (e) {
-    console.warn('Could not save to history:', e.message);
+    // History save failed silently
   }
 }
 
@@ -666,6 +704,7 @@ window.resetGenerator = function () {
   extractedData = {};
   selectedTemplate = null;
   document.getElementById('scorecardPreview').classList.add('hidden');
+  document.getElementById('scorecardUploadZone').style.display = '';
   document.getElementById('analyzeBtn').disabled = true;
   document.getElementById('scorecardUploadZone').querySelector('p').textContent = 'Click to upload or drag & drop';
   document.getElementById('scorecardUploadZone').querySelector('small').textContent = 'PNG, JPG, WEBP supported';
@@ -709,4 +748,108 @@ function fileToBase64(file) {
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
+}
+
+// =================== STRUCTURED SCORECARD SUMMARY ===================
+
+function buildScorecardSummary(d) {
+  const el = document.getElementById('scorecardSummary');
+  if (!el) return;
+
+  const ic = (name, cls='') =>
+    `<svg class="${cls}" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${lucideIcon(name)}</svg>`;
+
+  const metaItems = [
+    d.match_date   ? `<span class="ss-meta-item">${ic('calendar')} ${d.match_date}</span>` : '',
+    d.match_venue  ? `<span class="ss-meta-item">${ic('map-pin')} ${d.match_venue}</span>` : '',
+    d.toss_result  ? `<span class="ss-meta-item">${ic('coins')} ${d.toss_result}</span>` : '',
+  ].filter(Boolean).join('');
+
+  const teamBlock = (prefix, label) => {
+    const p = prefix + '_';
+    const batters = [1,2,3].map(i => {
+      const name = d[p+'batter'+i+'_name'];
+      const runs = d[p+'batter'+i+'_runs'];
+      const balls = d[p+'batter'+i+'_balls'];
+      if (!name) return '';
+      return `<div class="ss-player-row" style="--delay:${i*0.05}s">
+        <span class="ss-player-name">${name}</span>
+        <span class="ss-player-stat">${runs || '—'}</span>
+        <span class="ss-player-stat muted">${balls ? '('+balls+')' : ''}</span>
+      </div>`;
+    }).join('');
+
+    const bowlers = [1,2,3].map(i => {
+      const name = d[p+'bowler'+i+'_name'];
+      const wkts = d[p+'bowler'+i+'_wickets'];
+      const runs = d[p+'bowler'+i+'_runs'];
+      const ovs  = d[p+'bowler'+i+'_overs'];
+      if (!name) return '';
+      return `<div class="ss-player-row" style="--delay:${(i+3)*0.05}s">
+        <span class="ss-player-name">${name}</span>
+        <span class="ss-player-stat wickets">${wkts || '0'}W</span>
+        <span class="ss-player-stat muted">${runs ? runs+'R' : ''}${ovs ? ' ('+ovs+'ov)' : ''}</span>
+      </div>`;
+    }).join('');
+
+    return `
+      <div class="ss-team-row ${prefix==='team1'?'batting-first':''}">
+        <span class="ss-team-name">${d[prefix+'_name'] || label}</span>
+        <span class="ss-overs">${d[prefix+'_overs'] ? d[prefix+'_overs']+' ov' : ''}</span>
+        <span class="ss-score">${d[prefix+'_score'] || '—'}</span>
+      </div>
+      <div class="ss-players">
+        <div class="ss-section-label">${ic('bat')} Top Batters</div>
+        ${batters || '<div style="color:var(--muted);font-size:13px;padding:4px 0">No data</div>'}
+        <div class="ss-section-label" style="margin-top:14px">${ic('zap')} Top Bowlers</div>
+        ${bowlers || '<div style="color:var(--muted);font-size:13px;padding:4px 0">No data</div>'}
+      </div>`;
+  };
+
+  el.innerHTML = `
+    <div class="ss-header">
+      <div class="ss-tournament">${d.match_title || 'Match Summary'}</div>
+      ${metaItems ? `<div class="ss-meta">${metaItems}</div>` : ''}
+    </div>
+    <div class="ss-innings">
+      ${teamBlock('team1', 'Team 1')}
+      <div class="ss-divider"></div>
+      ${teamBlock('team2', 'Team 2')}
+    </div>
+    ${d.match_result ? `
+    <div class="ss-result">
+      <div class="ss-result-text">${ic('trophy')} ${d.match_result}</div>
+      ${d.man_of_match ? `<div class="ss-mom">${ic('award')} Player of Match: <strong>${d.man_of_match}</strong></div>` : ''}
+    </div>` : ''}
+  `;
+
+  // Re-init icons inside summary
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+// Helper to get lucide SVG path string for inline use
+function lucideIcon(name) {
+  const icons = {
+    'calendar': '<rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/>',
+    'map-pin': '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>',
+    'coins': '<circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/>',
+    'bat': '<path d="m2 22 1-1h3l9-9"/><path d="M3 21v-3l9-9"/><path d="m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8-1 1"/>',
+    'zap': '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+    'trophy': '<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>',
+    'award': '<circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/>',
+  };
+  return icons[name] || '';
+}
+
+// =================== LOADER STEP PROGRESSION ===================
+
+function advanceLoaderStep(step) {
+  for (let i = 1; i <= 3; i++) {
+    const el = document.getElementById('lstep'+i);
+    if (!el) continue;
+    if (i < step) { el.classList.remove('active'); el.classList.add('done'); }
+    else if (i === step) { el.classList.add('active'); el.classList.remove('done'); }
+    else { el.classList.remove('active', 'done'); }
+  }
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 }

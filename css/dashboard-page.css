@@ -116,3 +116,37 @@
 @media (max-width: 640px) {
   .quick-actions { grid-template-columns: 1fr; }
 }
+
+.recent-card-placeholder {
+  aspect-ratio: 1;
+  background: var(--surface2);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--muted);
+}
+.recent-card-placeholder svg { width: 32px; height: 32px; }
+
+.recent-card-info { padding: 12px 14px; }
+.recent-card-info h4 { font-size: 14px; font-weight: 600; }
+.recent-card-info p { font-size: 12px; color: var(--muted); margin-top: 3px; }
+.recent-card-actions {
+  display: flex; gap: 6px; margin-top: 10px;
+}
+.recent-card-actions .btn-sm { padding: 5px 10px; }
+
+.templates-loading {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+  grid-column: 1/-1;
+}
+.skel-card {
+  height: 320px;
+  border-radius: 14px;
+  background: linear-gradient(90deg, var(--surface) 25%, var(--surface2) 50%, var(--surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
