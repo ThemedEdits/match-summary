@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Templates — CricSnap</title>
+  <link rel="stylesheet" href="../css/dashboard.css" />
+  <link rel="stylesheet" href="../css/templates.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=Teko:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-brand">🏏 <span>CricSnap</span></div>
+    <div class="nav-links">
+      <a href="dashboard.html" class="nav-link">Dashboard</a>
+      <a href="templates.html" class="nav-link active">Templates</a>
+      <a href="generate.html" class="nav-link">Generate</a>
+    </div>
+    <div class="nav-user">
+      <span id="userNameDisplay"></span>
+      <button class="btn-logout" onclick="logoutUser()">Sign Out</button>
+    </div>
+  </nav>
+
+  <main class="page-main">
+    <div class="page-header">
+      <div>
+        <h1>Templates</h1>
+        <p>Upload background images and define where data fields appear</p>
+      </div>
+      <button class="btn-primary" onclick="openUploadModal()">+ New Template</button>
+    </div>
+
+    <div id="templateGrid" class="template-grid">
+      <div class="empty-state" id="emptyTemplates">
+        <div class="empty-icon">🖼️</div>
+        <p>No templates yet. Upload your first background!</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Upload Modal -->
+  <div id="uploadModal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2>New Template</h2>
+        <button class="modal-close" onclick="closeUploadModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="input-group">
+          <label>Template Name</label>
+          <input type="text" id="templateName" placeholder="e.g. League Match Card" />
+        </div>
+
+        <div class="upload-zone" id="templateUploadZone" onclick="document.getElementById('templateImageInput').click()">
+          <input type="file" id="templateImageInput" accept="image/*" style="display:none" onchange="handleTemplateImageSelect(event)" />
+          <div class="upload-icon">📤</div>
+          <p>Click to upload background image</p>
+          <small>PNG, JPG — recommended 1080×1080 or 1920×1080</small>
+        </div>
+        <img id="templatePreviewImg" class="hidden" style="max-width:100%;border-radius:8px;margin-top:12px;" />
+
+        <div id="fieldEditorWrap" class="hidden">
+          <div class="field-editor-instructions">
+            <strong>Define data fields on your template.</strong> Click "Add Field", drag the box to position it, resize as needed, then select its type.
+          </div>
+
+          <div class="field-toolbar">
+            <button class="btn-sm" onclick="addField()">+ Add Field</button>
+            <button class="btn-sm danger" onclick="deleteSelectedField()">🗑 Delete Selected</button>
+          </div>
+
+          <div class="canvas-wrapper">
+            <div id="fieldCanvas" class="field-canvas">
+              <img id="canvasImg" />
+              <!-- draggable boxes injected here -->
+            </div>
+          </div>
+
+          <div id="fieldTypePanel" class="field-type-panel hidden">
+            <label>Field Type for selected box:</label>
+            <select id="fieldTypeSelect" onchange="setFieldType(this.value)">
+              <option value="">-- Select Type --</option>
+              <optgroup label="Match Info">
+                <option value="match_title">Match Title / Series Name</option>
+                <option value="match_date">Match Date</option>
+                <option value="match_venue">Venue</option>
+                <option value="match_result">Match Result</option>
+                <option value="man_of_match">Man of the Match</option>
+                <option value="toss_result">Toss Result</option>
+              </optgroup>
+              <optgroup label="1st Innings (Batting Team)">
+                <option value="team1_name">Team 1 Name</option>
+                <option value="team1_score">Team 1 Score (Runs/Wkts)</option>
+                <option value="team1_overs">Team 1 Overs</option>
+                <option value="team1_batter1_name">Team 1 — Batter 1 Name</option>
+                <option value="team1_batter1_runs">Team 1 — Batter 1 Runs</option>
+                <option value="team1_batter1_balls">Team 1 — Batter 1 Balls</option>
+                <option value="team1_batter2_name">Team 1 — Batter 2 Name</option>
+                <option value="team1_batter2_runs">Team 1 — Batter 2 Runs</option>
+                <option value="team1_batter2_balls">Team 1 — Batter 2 Balls</option>
+                <option value="team1_batter3_name">Team 1 — Batter 3 Name</option>
+                <option value="team1_batter3_runs">Team 1 — Batter 3 Runs</option>
+                <option value="team1_batter3_balls">Team 1 — Batter 3 Balls</option>
+                <option value="team1_bowler1_name">Team 1 — Top Bowler 1 Name</option>
+                <option value="team1_bowler1_wickets">Team 1 — Bowler 1 Wickets</option>
+                <option value="team1_bowler1_runs">Team 1 — Bowler 1 Runs</option>
+                <option value="team1_bowler1_overs">Team 1 — Bowler 1 Overs</option>
+                <option value="team1_bowler2_name">Team 1 — Top Bowler 2 Name</option>
+                <option value="team1_bowler2_wickets">Team 1 — Bowler 2 Wickets</option>
+                <option value="team1_bowler2_runs">Team 1 — Bowler 2 Runs</option>
+                <option value="team1_bowler2_overs">Team 1 — Bowler 2 Overs</option>
+                <option value="team1_bowler3_name">Team 1 — Top Bowler 3 Name</option>
+                <option value="team1_bowler3_wickets">Team 1 — Bowler 3 Wickets</option>
+                <option value="team1_bowler3_runs">Team 1 — Bowler 3 Runs</option>
+                <option value="team1_bowler3_overs">Team 1 — Bowler 3 Overs</option>
+              </optgroup>
+              <optgroup label="2nd Innings (Chasing Team)">
+                <option value="team2_name">Team 2 Name</option>
+                <option value="team2_score">Team 2 Score (Runs/Wkts)</option>
+                <option value="team2_overs">Team 2 Overs</option>
+                <option value="team2_batter1_name">Team 2 — Batter 1 Name</option>
+                <option value="team2_batter1_runs">Team 2 — Batter 1 Runs</option>
+                <option value="team2_batter1_balls">Team 2 — Batter 1 Balls</option>
+                <option value="team2_batter2_name">Team 2 — Batter 2 Name</option>
+                <option value="team2_batter2_runs">Team 2 — Batter 2 Runs</option>
+                <option value="team2_batter2_balls">Team 2 — Batter 2 Balls</option>
+                <option value="team2_batter3_name">Team 2 — Batter 3 Name</option>
+                <option value="team2_batter3_runs">Team 2 — Batter 3 Runs</option>
+                <option value="team2_batter3_balls">Team 2 — Batter 3 Balls</option>
+                <option value="team2_bowler1_name">Team 2 — Top Bowler 1 Name</option>
+                <option value="team2_bowler1_wickets">Team 2 — Bowler 1 Wickets</option>
+                <option value="team2_bowler1_runs">Team 2 — Bowler 1 Runs</option>
+                <option value="team2_bowler1_overs">Team 2 — Bowler 1 Overs</option>
+                <option value="team2_bowler2_name">Team 2 — Top Bowler 2 Name</option>
+                <option value="team2_bowler2_wickets">Team 2 — Bowler 2 Wickets</option>
+                <option value="team2_bowler2_runs">Team 2 — Bowler 2 Runs</option>
+                <option value="team2_bowler2_overs">Team 2 — Bowler 2 Overs</option>
+                <option value="team2_bowler3_name">Team 2 — Top Bowler 3 Name</option>
+                <option value="team2_bowler3_wickets">Team 2 — Bowler 3 Wickets</option>
+                <option value="team2_bowler3_runs">Team 2 — Bowler 3 Runs</option>
+                <option value="team2_bowler3_overs">Team 2 — Bowler 3 Overs</option>
+              </optgroup>
+            </select>
+            <div class="input-group" style="margin-top:10px">
+              <label>Font Size (px)</label>
+              <input type="number" id="fieldFontSize" value="16" min="8" max="72" onchange="setFieldFontSize(this.value)" />
+            </div>
+            <div class="input-group" style="margin-top:8px">
+              <label>Text Color</label>
+              <input type="color" id="fieldColor" value="#ffffff" onchange="setFieldColor(this.value)" />
+            </div>
+            <div class="input-group" style="margin-top:8px">
+              <label>Font Weight</label>
+              <select id="fieldFontWeight" onchange="setFieldFontWeight(this.value)">
+                <option value="400">Normal</option>
+                <option value="600" selected>Semi-Bold</option>
+                <option value="700">Bold</option>
+                <option value="800">Extra Bold</option>
+              </select>
+            </div>
+            <div class="input-group" style="margin-top:8px">
+              <label>Text Align</label>
+              <select id="fieldTextAlign" onchange="setFieldTextAlign(this.value)">
+                <option value="left">Left</option>
+                <option value="center" selected>Center</option>
+                <option value="right">Right</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="fields-list" id="fieldsList"></div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeUploadModal()">Cancel</button>
+        <button class="btn-primary" onclick="saveTemplate()" id="saveTemplateBtn" disabled>Save Template</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Modal -->
+  <div id="editModal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2>Edit Template</h2>
+        <button class="modal-close" onclick="closeEditModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p>Re-open field editor to adjust positions and types for this template.</p>
+        <button class="btn-primary" onclick="openFieldEditorForEdit()">Open Field Editor</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="../js/templates.js"></script>
+</body>
+</html>

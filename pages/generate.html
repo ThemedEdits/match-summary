@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Generate — CricSnap</title>
+  <link rel="stylesheet" href="../css/dashboard.css" />
+  <link rel="stylesheet" href="../css/generate.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=Teko:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-brand">🏏 <span>CricSnap</span></div>
+    <div class="nav-links">
+      <a href="dashboard.html" class="nav-link">Dashboard</a>
+      <a href="templates.html" class="nav-link">Templates</a>
+      <a href="generate.html" class="nav-link active">Generate</a>
+    </div>
+    <div class="nav-user">
+      <span id="userNameDisplay"></span>
+      <button class="btn-logout" onclick="logoutUser()">Sign Out</button>
+    </div>
+  </nav>
+
+  <main class="page-main">
+    <div class="page-header">
+      <div>
+        <h1>Generate Summary</h1>
+        <p>Upload a scorecard screenshot — AI will extract all match data automatically</p>
+      </div>
+    </div>
+
+    <!-- Step 1: Upload -->
+    <div class="gen-steps">
+      <div class="step-card" id="step1Card">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>Upload Scorecard Screenshot</h3>
+          <p>Take a full-page screenshot of any CricHeroes (or similar) scorecard</p>
+
+          <div class="upload-zone" id="scorecardUploadZone" onclick="document.getElementById('scorecardInput').click()">
+            <input type="file" id="scorecardInput" accept="image/*" style="display:none" onchange="handleScorecardUpload(event)" />
+            <div class="upload-icon">📸</div>
+            <p>Click to upload or drag & drop</p>
+            <small>PNG, JPG, WEBP supported</small>
+          </div>
+
+          <img id="scorecardPreview" class="hidden scorecard-preview" />
+
+          <button class="btn-primary" id="analyzeBtn" onclick="analyzeScorecard()" disabled style="margin-top:16px">
+            🔍 Analyze with AI
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 2: Extracted Data -->
+      <div class="step-card hidden" id="step2Card">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>Extracted Match Data</h3>
+          <p>Review and edit the extracted data before generating your summary</p>
+
+          <div id="extractedDataForm" class="data-form">
+            <!-- Injected by JS -->
+          </div>
+
+          <button class="btn-primary" onclick="proceedToTemplate()" style="margin-top:20px">
+            Continue to Template →
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 3: Template Selection -->
+      <div class="step-card hidden" id="step3Card">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>Select a Template</h3>
+          <p>Choose a background template for your summary graphic</p>
+
+          <div id="templateSelectGrid" class="template-select-grid">
+            <div class="loading-templates">Loading templates...</div>
+          </div>
+
+          <!-- No-template option -->
+          <div class="no-template-opt">
+            <input type="radio" name="templateChoice" id="noTemplateOpt" value="none" onchange="selectTemplate(null)" />
+            <label for="noTemplateOpt">No template — plain summary card</label>
+          </div>
+
+          <button class="btn-primary" onclick="generateFinal()" id="generateFinalBtn" disabled style="margin-top:20px">
+            ✨ Generate Final Card
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 4: Preview & Download -->
+      <div class="step-card hidden" id="step4Card">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>Preview & Download</h3>
+          <p>Your match summary card is ready!</p>
+
+          <div class="preview-wrap">
+            <canvas id="previewCanvas"></canvas>
+          </div>
+
+          <div class="download-actions">
+            <button class="btn-primary" onclick="downloadCard()">⬇ Download PNG</button>
+            <button class="btn-secondary" onclick="resetGenerator()">Generate Another</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Loader -->
+    <div id="aiLoader" class="ai-loader hidden">
+      <div class="loader-content">
+        <div class="loader-spinner"></div>
+        <h3>AI is analyzing the scorecard...</h3>
+        <p id="loaderStatus">Reading batting stats...</p>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="../js/generate.js"></script>
+</body>
+</html>

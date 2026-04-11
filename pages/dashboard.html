@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard — CricSnap</title>
+  <link rel="stylesheet" href="../css/dashboard.css" />
+  <link rel="stylesheet" href="../css/dashboard-page.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=Teko:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="nav-brand">🏏 <span>CricSnap</span></div>
+    <div class="nav-links">
+      <a href="dashboard.html" class="nav-link active">Dashboard</a>
+      <a href="templates.html" class="nav-link">Templates</a>
+      <a href="generate.html" class="nav-link">Generate</a>
+    </div>
+    <div class="nav-user">
+      <span id="userNameDisplay"></span>
+      <button class="btn-logout" onclick="logoutUser()">Sign Out</button>
+    </div>
+  </nav>
+
+  <main class="dashboard-main">
+    <div class="dashboard-hero">
+      <h1>Welcome back, <span id="heroName">Scorer</span> 👋</h1>
+      <p>Generate stunning cricket match summaries from scorecards in seconds.</p>
+    </div>
+
+    <div class="quick-actions">
+      <a href="generate.html" class="action-card primary">
+        <div class="action-icon">📸</div>
+        <div class="action-text">
+          <h3>Generate Summary</h3>
+          <p>Upload a scorecard screenshot and get an instant summary</p>
+        </div>
+        <div class="action-arrow">→</div>
+      </a>
+      <a href="templates.html" class="action-card">
+        <div class="action-icon">🖼️</div>
+        <div class="action-text">
+          <h3>Manage Templates</h3>
+          <p>Upload and configure your custom background templates</p>
+        </div>
+        <div class="action-arrow">→</div>
+      </a>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-num" id="statTemplates">0</div>
+        <div class="stat-label">Templates</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="statSummaries">0</div>
+        <div class="stat-label">Summaries Generated</div>
+      </div>
+    </div>
+
+    <div class="recent-section">
+      <h2>Recent Summaries</h2>
+      <div id="recentSummaries" class="recent-grid">
+        <div class="empty-state">
+          <div class="empty-icon">🏏</div>
+          <p>No summaries yet. <a href="generate.html">Generate your first one!</a></p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="../js/dashboard.js"></script>
+</body>
+</html>
