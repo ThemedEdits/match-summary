@@ -5,6 +5,32 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CricSnap — Professional Cricket Summary Generator</title>
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://match-summary-generator.vercel.app/" />
+  <meta property="og:title" content="CricSnap — Professional Cricket Summary Generator" />
+  <meta property="og:description"
+    content="Upload any CricHeroes scorecard screenshot. AI reads every stat and creates beautiful branded cricket cards instantly." />
+  <meta property="og:image" content="https://match-summary-generator.vercel.app/images/cricsnap-s.png?v=2" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:type" content="image/jpeg" />
+  <meta property="og:image:secure_url" content="https://match-summary-generator.vercel.app/images/cricsnap-s.png" />
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image" />
+  <meta property="twitter:url" content="https://match-summary-generator.vercel.app/" />
+  <meta property="twitter:title" content="CricSnap — Professional Cricket Summary Generator" />
+  <meta property="twitter:description"
+    content="Upload any CricHeroes scorecard screenshot. AI reads every stat and creates beautiful branded cricket cards instantly." />
+  <meta property="twitter:image" content="https://match-summary-generator.vercel.app/images/cricsnap-s.png" />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/cricsnap-tab.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/cricsnap-tab.png" />
+  <link rel="apple-touch-icon" href="/images/cricsnap-tab.png" />
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link
     href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Teko:wght@300;400;500;600&display=swap"
@@ -1291,51 +1317,52 @@
         transform: rotate(360deg);
       }
     }
+
     /* Tooltip styles */
-.tooltip-trigger {
-  position: relative;
-  cursor: help;
-}
+    .tooltip-trigger {
+      position: relative;
+      cursor: help;
+    }
 
-.tooltip-trigger .tooltip-text {
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%) translateY(-8px);
-  background: var(--surface2);
-  color: var(--accent);
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 11px;
-  font-weight: 500;
-  white-space: nowrap;
-  pointer-events: none;
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  z-index: 100;
-  border: 1px solid var(--border);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  font-family: 'DM Sans', sans-serif;
-  letter-spacing: 0.3px;
-}
+    .tooltip-trigger .tooltip-text {
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%) translateY(-8px);
+      background: var(--surface2);
+      color: var(--accent);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 500;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      z-index: 100;
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      font-family: 'DM Sans', sans-serif;
+      letter-spacing: 0.3px;
+    }
 
-.tooltip-trigger .tooltip-text::after {
-  content: '';
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border-width: 5px;
-  border-style: solid;
-  border-color: var(--surface2) transparent transparent transparent;
-}
+    .tooltip-trigger .tooltip-text::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border-width: 5px;
+      border-style: solid;
+      border-color: var(--surface2) transparent transparent transparent;
+    }
 
-.tooltip-trigger:hover .tooltip-text {
-  opacity: 1;
-  visibility: visible;
-  transform: translateX(-50%) translateY(-4px);
-}
+    .tooltip-trigger:hover .tooltip-text {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(-4px);
+    }
   </style>
 </head>
 
@@ -1371,61 +1398,61 @@
     <!-- Floating scorecard mockup -->
     <div class="hero-scorecard" id="heroScorecard">
       <div class="scorecard-mock">
-  <div class="sm-header">
-    <div class="sm-tournament">MMK Super League — Season 05</div>
-  </div>
-  <div class="sm-teams">
-    <div class="sm-team-row tooltip-trigger">
-      <span class="sm-team-name">ZN Sports</span>
-      <span>
-        <span class="sm-score">127/8</span>
-        <span class="sm-overs">(20.0)</span>
-      </span>
-      <span class="tooltip-text">Team 1: Total score & overs</span>
-    </div>
-    <div class="sm-team-row tooltip-trigger">
-      <span class="sm-team-name" style="color:var(--accent)">Karachi Hunter CC</span>
-      <span>
-        <span class="sm-score">130/3</span>
-        <span class="sm-overs">(14.3)</span>
-      </span>
-      <span class="tooltip-text">Team 2: Total score & overs (Winning team)</span>
-    </div>
-  </div>
-  <div class="sm-stats">
-    <div class="sm-section">Top Batters — ZN Sports</div>
-    <div class="sm-player tooltip-trigger">
-      <span class="sm-player-name">Huzaifa Malik</span>
-      <span class="sm-player-stat">42 (41)</span>
-      <span class="tooltip-text">Runs (Balls faced) - Strike Rate: 102.4</span>
-    </div>
-    <div class="sm-player tooltip-trigger">
-      <span class="sm-player-name">Hamza Ahmed</span>
-      <span class="sm-player-stat">27 (25)</span>
-      <span class="tooltip-text">Runs (Balls faced) - Strike Rate: 108.0</span>
-    </div>
-    <div class="sm-player tooltip-trigger">
-      <span class="sm-player-name">Muhammad Ali</span>
-      <span class="sm-player-stat">24 (21)</span>
-      <span class="tooltip-text">Runs (Balls faced) - Strike Rate: 114.3</span>
-    </div>
-    <div class="sm-section" style="margin-top:10px">Top Bowlers</div>
-    <div class="sm-player tooltip-trigger">
-      <span class="sm-player-name">Arsalan Khan</span>
-      <span class="sm-player-stat" style="color:#ffeb3b">4W / 25R</span>
-      <span class="tooltip-text">Wickets / Runs conceded - Economy: 6.25</span>
-    </div>
-    <div class="sm-player tooltip-trigger">
-      <span class="sm-player-name">Suffyan Butt</span>
-      <span class="sm-player-stat" style="color:#ffeb3b">1W / 12R</span>
-      <span class="tooltip-text">Wickets / Runs conceded - Economy: 3.00</span>
-    </div>
-  </div>
-  <div class="sm-result tooltip-trigger">
-    🏆 Karachi Hunter CC won by 7 wickets
-    <span class="tooltip-text">Result: Karachi Hunter CC won with 33 balls remaining</span>
-  </div>
-</div>
+        <div class="sm-header">
+          <div class="sm-tournament">MMK Super League — Season 05</div>
+        </div>
+        <div class="sm-teams">
+          <div class="sm-team-row tooltip-trigger">
+            <span class="sm-team-name">ZN Sports</span>
+            <span>
+              <span class="sm-score">127/8</span>
+              <span class="sm-overs">(20.0)</span>
+            </span>
+            <span class="tooltip-text">Team 1: Total score & overs</span>
+          </div>
+          <div class="sm-team-row tooltip-trigger">
+            <span class="sm-team-name" style="color:var(--accent)">Karachi Hunter CC</span>
+            <span>
+              <span class="sm-score">130/3</span>
+              <span class="sm-overs">(14.3)</span>
+            </span>
+            <span class="tooltip-text">Team 2: Total score & overs (Winning team)</span>
+          </div>
+        </div>
+        <div class="sm-stats">
+          <div class="sm-section">Top Batters — ZN Sports</div>
+          <div class="sm-player tooltip-trigger">
+            <span class="sm-player-name">Huzaifa Malik</span>
+            <span class="sm-player-stat">42 (41)</span>
+            <span class="tooltip-text">Runs (Balls faced) - Strike Rate: 102.4</span>
+          </div>
+          <div class="sm-player tooltip-trigger">
+            <span class="sm-player-name">Hamza Ahmed</span>
+            <span class="sm-player-stat">27 (25)</span>
+            <span class="tooltip-text">Runs (Balls faced) - Strike Rate: 108.0</span>
+          </div>
+          <div class="sm-player tooltip-trigger">
+            <span class="sm-player-name">Muhammad Ali</span>
+            <span class="sm-player-stat">24 (21)</span>
+            <span class="tooltip-text">Runs (Balls faced) - Strike Rate: 114.3</span>
+          </div>
+          <div class="sm-section" style="margin-top:10px">Top Bowlers</div>
+          <div class="sm-player tooltip-trigger">
+            <span class="sm-player-name">Arsalan Khan</span>
+            <span class="sm-player-stat" style="color:#ffeb3b">4W / 25R</span>
+            <span class="tooltip-text">Wickets / Runs conceded - Economy: 6.25</span>
+          </div>
+          <div class="sm-player tooltip-trigger">
+            <span class="sm-player-name">Suffyan Butt</span>
+            <span class="sm-player-stat" style="color:#ffeb3b">1W / 12R</span>
+            <span class="tooltip-text">Wickets / Runs conceded - Economy: 3.00</span>
+          </div>
+        </div>
+        <div class="sm-result tooltip-trigger">
+          🏆 Karachi Hunter CC won by 7 wickets
+          <span class="tooltip-text">Result: Karachi Hunter CC won with 33 balls remaining</span>
+        </div>
+      </div>
     </div>
 
     <!-- AI processing badge -->
