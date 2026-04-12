@@ -6,6 +6,7 @@
   <title>Templates — CricSnap</title>
   <link rel="stylesheet" href="../css/dashboard.css" />
   <link rel="stylesheet" href="../css/templates.css" />
+  <link rel="stylesheet" href="../css/dropdown.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=Teko:wght@400;600&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
@@ -63,7 +64,7 @@
 
               <div class="input-group">
                 <label>Field Type</label>
-                <select id="fieldTypeSelect" onchange="setFieldType(this.value)">
+                <select id="fieldTypeSelect">
                   <option value="">-- Select Type --</option>
                   <optgroup label="Match Info">
                     <option value="match_title">Match Title / Series Name</option>
@@ -131,7 +132,7 @@
               <div class="field-style-row">
                 <div class="input-group">
                   <label>Font</label>
-                  <select id="fieldFontFamily" onchange="setFieldFontFamily(this.value)">
+                  <select id="fieldFontFamily">
                     <option value="DM Sans">DM Sans</option>
                     <option value="Bebas Neue">Bebas Neue</option>
                     <option value="Teko">Teko</option>
@@ -149,7 +150,7 @@
               <div class="field-style-row">
                 <div class="input-group">
                   <label>Weight</label>
-                  <select id="fieldFontWeight" onchange="setFieldFontWeight(this.value)">
+                  <select id="fieldFontWeight">
                     <option value="300">Light</option>
                     <option value="400">Normal</option>
                     <option value="600" selected>Semi-Bold</option>
@@ -160,7 +161,7 @@
                 </div>
                 <div class="input-group">
                   <label>Align</label>
-                  <select id="fieldTextAlign" onchange="setFieldTextAlign(this.value)">
+                  <select id="fieldTextAlign">
                     <option value="left">Left</option>
                     <option value="center" selected>Center</option>
                     <option value="right">Right</option>
@@ -212,6 +213,7 @@
   </div>
 
   <script>document.addEventListener('DOMContentLoaded', () => lucide.createIcons());</script>
+  <script type="module" src="../js/dropdown.js"></script>
   <script type="module" src="../js/templates.js"></script>
 </body>
 </html>

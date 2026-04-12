@@ -1,15 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description"
+    content="CricSnap - Professional cricket summary generator. Create stunning cricket match cards from CricHeroes screenshots with AI." />
+  <meta name="keywords" content="cricket, scorecard, cricket summary, CricHeroes, AI generator" />
+  <meta name="author" content="Themed Edits" />
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://match-summary-generator.vercel.app/" />
+  <meta property="og:title" content="CricSnap — Professional Cricket Summary Generator" />
+  <meta property="og:description"
+    content="Upload any CricHeroes scorecard screenshot. AI reads every stat and creates beautiful branded cricket cards instantly." />
+  <meta property="og:image" content="https://match-summary-generator.vercel.app/images/cricsnap-sharing.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image" />
+  <meta property="twitter:url" content="https://match-summary-generator.vercel.app/" />
+  <meta property="twitter:title" content="CricSnap — Professional Cricket Summary Generator" />
+  <meta property="twitter:description"
+    content="Upload any CricHeroes scorecard screenshot. AI reads every stat and creates beautiful branded cricket cards instantly." />
+  <meta property="twitter:image" content="https://match-summary-generator.vercel.app/images/cricsnap-sharing.jpg" />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="https://match-summary-generator.vercel.app/images/cricsnap-logo.svg" />
+  <link rel="apple-touch-icon" href="https://match-summary-generator.vercel.app/images/cricsnap-logo.svg" />
+
+  <!-- Canonical URL -->
+  <link rel="canonical" href="https://match-summary-generator.vercel.app/" />
+
   <title>Dashboard — CricSnap</title>
   <link rel="stylesheet" href="../css/dashboard.css" />
   <link rel="stylesheet" href="../css/dashboard-page.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=Teko:wght@400;600&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=Teko:wght@400;600&display=swap"
+    rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 </head>
+
 <body>
   <nav class="navbar">
     <div class="nav-brand"><i data-lucide="activity"></i><span>CricSnap</span></div>
@@ -31,12 +65,18 @@
     <div class="quick-actions">
       <a href="generate.html" class="action-card primary reveal" style="--delay:0.1s">
         <div class="action-icon"><i data-lucide="camera"></i></div>
-        <div class="action-text"><h3>Generate Summary</h3><p>Upload a scorecard screenshot and get an instant summary</p></div>
+        <div class="action-text">
+          <h3>Generate Summary</h3>
+          <p>Upload a scorecard screenshot and get an instant summary</p>
+        </div>
         <div class="action-arrow"><i data-lucide="arrow-right"></i></div>
       </a>
       <a href="templates.html" class="action-card reveal" style="--delay:0.2s">
         <div class="action-icon"><i data-lucide="layout-template"></i></div>
-        <div class="action-text"><h3>Manage Templates</h3><p>Upload and configure your custom background templates</p></div>
+        <div class="action-text">
+          <h3>Manage Templates</h3>
+          <p>Upload and configure your custom background templates</p>
+        </div>
         <div class="action-arrow"><i data-lucide="arrow-right"></i></div>
       </a>
     </div>
@@ -53,11 +93,15 @@
     <div class="recent-section reveal" style="--delay:0.4s">
       <h2>Recent Summaries</h2>
       <div id="recentSummaries" class="recent-grid">
-        <div class="empty-state"><div class="empty-icon"><i data-lucide="image-off"></i></div><p>No summaries yet. <a href="generate.html">Generate your first one!</a></p></div>
+        <div class="empty-state">
+          <div class="empty-icon"><i data-lucide="image-off"></i></div>
+          <p>No summaries yet. <a href="generate.html">Generate your first one!</a></p>
+        </div>
       </div>
     </div>
   </main>
   <script>document.addEventListener('DOMContentLoaded', () => lucide.createIcons());</script>
   <script type="module" src="../js/dashboard.js"></script>
 </body>
+
 </html>

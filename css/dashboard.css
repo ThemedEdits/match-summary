@@ -314,3 +314,20 @@ body {
 .btn-logout svg { width: 14px; height: 14px; }
 .btn-primary svg, .btn-secondary svg { width: 15px; height: 15px; }
 .btn-sm svg { width: 13px; height: 13px; }
+
+/* ===== CUSTOM DROPDOWN INTEGRATION ===== */
+/* Make dropdown trigger match input-group styling exactly */
+.input-group .cs-trigger {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  min-height: 38px;
+}
+.input-group .cs-trigger:hover { border-color: rgba(0,200,83,0.4); }
+.input-group .cs-select-wrapper:has(.cs-dropdown.open) .cs-trigger {
+  border-color: var(--green);
+}

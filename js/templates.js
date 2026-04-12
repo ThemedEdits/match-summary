@@ -2,6 +2,7 @@ import { db } from './firebase-config.js';
 import { requireAuth } from './auth-guard.js';
 import { uploadToCloudinary } from './cloudinary.js';
 import { showToast, showAlert, showConfirm } from './popup.js';
+import { initDropdowns, setDropdownValue } from './dropdown.js';
 import {
   collection, addDoc, getDocs, query, where, deleteDoc, doc, updateDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -19,7 +20,22 @@ requireAuth(async (user) => {
   currentUser = user;
   await loadAvailableFonts();
   loadTemplates();
+  // Wire up select change handlers (works with both native and custom dropdowns)
+  wireSelectHandlers();
 });
+
+function wireSelectHandlers() {
+  const wire = (id, fn) => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('change', (e) => fn(e.target.value));
+  };
+  wire('fieldTypeSelect', (v) => window.setFieldType(v));
+  wire('fieldFontFamily', (v) => window.setFieldFontFamily(v));
+  wire('fieldFontSize', (v) => window.setFieldFontSize(v));
+  wire('fieldFontWeight', (v) => window.setFieldFontWeight(v));
+  wire('fieldTextAlign', (v) => window.setFieldTextAlign(v));
+  wire('fieldColor', (v) => window.setFieldColor(v));
+}
 
 // =================== FONT FOLDER LOADER ===================
 
@@ -53,6 +69,9 @@ async function loadAvailableFonts() {
       group.appendChild(opt);
     });
     sel.insertBefore(group, sel.firstChild);
+    // Re-init dropdown to pick up new options
+    sel.removeAttribute('data-cs-dropdown-init');
+    initDropdowns(sel.closest('.field-type-panel') || document);
   } catch (_) {}
 }
 
@@ -164,6 +183,7 @@ window.openUploadModal = function () {
   if (img) img.src = '';
   document.getElementById('uploadModal').classList.remove('hidden');
   if (typeof lucide !== 'undefined') lucide.createIcons();
+  setTimeout(() => initDropdowns(document.getElementById('uploadModal')), 50);
 };
 
 window.closeUploadModal = function () {
@@ -242,8 +262,11 @@ function selectField(id) {
   document.getElementById('fieldFontWeight').value = f.fontWeight || '600';
   document.getElementById('fieldTextAlign').value = f.textAlign || 'center';
   const sel = document.getElementById('fieldFontFamily');
-  const match = [...sel.options].find(o => o.value === (f.fontFamily || 'DM Sans'));
-  sel.value = match ? match.value : 'DM Sans';
+  const targetFont = (f.fontFamily && [...sel.options].some(o => o.value === f.fontFamily)) ? f.fontFamily : 'DM Sans';
+  sel.value = targetFont;
+  setDropdownValue(sel, targetFont);
+  setDropdownValue(document.getElementById('fieldFontWeight'), f.fontWeight || '600');
+  setDropdownValue(document.getElementById('fieldTextAlign'), f.textAlign || 'center');
 }
 
 window.addField = function () {
