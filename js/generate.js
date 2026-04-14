@@ -23,17 +23,29 @@ import { showToast, showAlert } from './popup.js';
 //   Set USE_PROXY = false and paste your key below.
 
 const USE_PROXY = true; // true = use /api/analyze (Vercel), false = direct browser call
-const OPENROUTER_API_KEY = 'none'; // get free key at openrouter.ai
+const OPENROUTER_API_KEY = 'YOUR_OPENROUTER_KEY_HERE'; // get free key at openrouter.ai
 
 let currentUser = null;
 let scorecardFile = null;
 let extractedData = {};
 let selectedTemplate = null;
 let userTemplates = [];
+let topCount = 3; // user-selected: 2, 3, or 4
 
 requireAuth((user) => {
   currentUser = user;
 });
+
+window.setTopCount = function(n) {
+  topCount = n;
+  document.querySelectorAll('.top-count-btn').forEach(btn => {
+    btn.classList.toggle('active', parseInt(btn.dataset.value) === n);
+  });
+  // If summary already shown, rebuild it with new count
+  if (Object.keys(extractedData).length > 0) {
+    buildScorecardSummary(extractedData);
+  }
+};
 
 // =================== STEP 1: UPLOAD ===================
 
@@ -110,16 +122,23 @@ The JSON must follow this exact structure (fill every field you can find, leave 
   "team1_batter1_name": "top run scorer name",
   "team1_batter1_runs": "runs as number only",
   "team1_batter1_balls": "balls faced as number only",
+  "team1_batter1_notout": "true if not out, false if out",
   "team1_batter2_name": "2nd top run scorer",
   "team1_batter2_runs": "",
   "team1_batter2_balls": "",
+  "team1_batter2_notout": "",
   "team1_batter3_name": "3rd top run scorer",
   "team1_batter3_runs": "",
   "team1_batter3_balls": "",
+  "team1_batter3_notout": "true if not out, false if out",
+  "team1_batter4_name": "4th top run scorer",
+  "team1_batter4_runs": "",
+  "team1_batter4_balls": "",
+  "team1_batter4_notout": "",
   "team1_bowler1_name": "best bowler who bowled AGAINST team1 (most wickets)",
   "team1_bowler1_wickets": "wickets as number only",
   "team1_bowler1_runs": "runs conceded as number only",
-  "team1_bowler1_overs": "overs bowled",
+  "team1_bowler1_overs": "overs bowled e.g. 4.0 or 3.2",
   "team1_bowler2_name": "2nd best bowler against team1",
   "team1_bowler2_wickets": "",
   "team1_bowler2_runs": "",
@@ -128,18 +147,29 @@ The JSON must follow this exact structure (fill every field you can find, leave 
   "team1_bowler3_wickets": "",
   "team1_bowler3_runs": "",
   "team1_bowler3_overs": "",
+  "team1_bowler4_name": "4th best bowler against team1",
+  "team1_bowler4_wickets": "",
+  "team1_bowler4_runs": "",
+  "team1_bowler4_overs": "",
   "team2_name": "name of team that batted SECOND",
   "team2_score": "runs/wickets",
   "team2_overs": "overs",
   "team2_batter1_name": "top run scorer",
   "team2_batter1_runs": "",
   "team2_batter1_balls": "",
+  "team2_batter1_notout": "true if not out, false if out",
   "team2_batter2_name": "",
   "team2_batter2_runs": "",
   "team2_batter2_balls": "",
+  "team2_batter2_notout": "",
   "team2_batter3_name": "",
   "team2_batter3_runs": "",
   "team2_batter3_balls": "",
+  "team2_batter3_notout": "",
+  "team2_batter4_name": "",
+  "team2_batter4_runs": "",
+  "team2_batter4_balls": "",
+  "team2_batter4_notout": "",
   "team2_bowler1_name": "best bowler who bowled AGAINST team2 (most wickets)",
   "team2_bowler1_wickets": "",
   "team2_bowler1_runs": "",
@@ -151,12 +181,18 @@ The JSON must follow this exact structure (fill every field you can find, leave 
   "team2_bowler3_name": "",
   "team2_bowler3_wickets": "",
   "team2_bowler3_runs": "",
-  "team2_bowler3_overs": ""
+  "team2_bowler3_overs": "",
+  "team2_bowler4_name": "",
+  "team2_bowler4_wickets": "",
+  "team2_bowler4_runs": "",
+  "team2_bowler4_overs": ""
 }
 
 Rules:
-- Top batters: sort by runs descending, pick top 3 per team.
-- Top bowlers per team: pick from the OPPOSING team's bowling figures. Sort by wickets descending, then economy ascending.
+- Top batters: sort by runs descending, pick top 4 per team (we may show fewer but extract all 4).
+- Top bowlers: pick from the OPPOSING team's bowling figures. Sort by wickets descending, then economy ascending. Extract top 4.
+- notout fields: set to "true" if the batter was NOT OUT (shown as "not out" in scorecard), "false" if they were dismissed. Empty string if unclear.
+- overs fields: include full overs notation e.g. "4.0" or "3.2".
 - Return ONLY the JSON. No text before or after.`;
 
     updateLoaderStatus('Detecting available Gemini model...');
@@ -756,41 +792,67 @@ function buildScorecardSummary(d) {
   const el = document.getElementById('scorecardSummary');
   if (!el) return;
 
-  const ic = (name, cls='') =>
-    `<svg class="${cls}" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${lucideIcon(name)}</svg>`;
+  const ic = (name) =>
+    `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${lucideIcon(name)}</svg>`;
 
   const metaItems = [
-    d.match_date   ? `<span class="ss-meta-item">${ic('calendar')} ${d.match_date}</span>` : '',
-    d.match_venue  ? `<span class="ss-meta-item">${ic('map-pin')} ${d.match_venue}</span>` : '',
-    d.toss_result  ? `<span class="ss-meta-item">${ic('coins')} ${d.toss_result}</span>` : '',
+    d.match_date  ? `<span class="ss-meta-item">${ic('calendar')} ${d.match_date}</span>` : '',
+    d.match_venue ? `<span class="ss-meta-item">${ic('map-pin')} ${d.match_venue}</span>` : '',
+    d.toss_result ? `<span class="ss-meta-item">${ic('coins')} ${d.toss_result}</span>` : '',
   ].filter(Boolean).join('');
+
+  // Copy button helper — copies multi-line text to clipboard
+  const copyBtn = (id) =>
+    `<button class="ss-copy-btn" title="Copy" data-copy-target="${id}">${ic('copy')}</button>`;
 
   const teamBlock = (prefix, label) => {
     const p = prefix + '_';
-    const batters = [1,2,3].map(i => {
-      const name = d[p+'batter'+i+'_name'];
-      const runs = d[p+'batter'+i+'_runs'];
+    const n = topCount;
+
+    // Build batter rows
+    let batterNames = [], batterRuns = [], batterBalls = [];
+    let batterRowsHtml = '';
+    for (let i = 1; i <= n; i++) {
+      const name  = d[p+'batter'+i+'_name'];
+      const runs  = d[p+'batter'+i+'_runs'];
       const balls = d[p+'batter'+i+'_balls'];
-      if (!name) return '';
-      return `<div class="ss-player-row" style="--delay:${i*0.05}s">
+      const notout = d[p+'batter'+i+'_notout'];
+      if (!name) continue;
+      const runsDisplay = runs ? (notout === 'true' ? runs + '*' : runs) : '—';
+      batterNames.push(name);
+      batterRuns.push(runsDisplay);
+      batterBalls.push(balls || '—');
+      batterRowsHtml += `<div class="ss-player-row" style="--delay:${i*0.05}s">
         <span class="ss-player-name">${name}</span>
-        <span class="ss-player-stat">${runs || '—'}</span>
+        <span class="ss-player-stat">${runsDisplay}</span>
         <span class="ss-player-stat muted">${balls ? '('+balls+')' : ''}</span>
       </div>`;
-    }).join('');
+    }
 
-    const bowlers = [1,2,3].map(i => {
+    // Build bowler rows — format: W-R (Ov)
+    let bowlerNames = [], bowlerStats = [];
+    let bowlerRowsHtml = '';
+    for (let i = 1; i <= n; i++) {
       const name = d[p+'bowler'+i+'_name'];
       const wkts = d[p+'bowler'+i+'_wickets'];
       const runs = d[p+'bowler'+i+'_runs'];
       const ovs  = d[p+'bowler'+i+'_overs'];
-      if (!name) return '';
-      return `<div class="ss-player-row" style="--delay:${(i+3)*0.05}s">
+      if (!name) continue;
+      const statStr = `${wkts||'0'}-${runs||'0'}${ovs ? ' ('+ovs+')' : ''}`;
+      bowlerNames.push(name);
+      bowlerStats.push(statStr);
+      bowlerRowsHtml += `<div class="ss-player-row" style="--delay:${(i+4)*0.05}s">
         <span class="ss-player-name">${name}</span>
-        <span class="ss-player-stat wickets">${wkts || '0'}W</span>
-        <span class="ss-player-stat muted">${runs ? runs+'R' : ''}${ovs ? ' ('+ovs+'ov)' : ''}</span>
+        <span class="ss-player-stat wickets">${statStr}</span>
       </div>`;
-    }).join('');
+    }
+
+    // Unique IDs for copy targets
+    const bnId   = prefix+'-batter-names';
+    const brId   = prefix+'-batter-runs';
+    const bbId   = prefix+'-batter-balls';
+    const bowlId = prefix+'-bowler-names';
+    const bsId   = prefix+'-bowler-stats';
 
     return `
       <div class="ss-team-row ${prefix==='team1'?'batting-first':''}">
@@ -799,10 +861,27 @@ function buildScorecardSummary(d) {
         <span class="ss-score">${d[prefix+'_score'] || '—'}</span>
       </div>
       <div class="ss-players">
-        <div class="ss-section-label">${ic('bat')} Top Batters</div>
-        ${batters || '<div style="color:var(--muted);font-size:13px;padding:4px 0">No data</div>'}
-        <div class="ss-section-label" style="margin-top:14px">${ic('zap')} Top Bowlers</div>
-        ${bowlers || '<div style="color:var(--muted);font-size:13px;padding:4px 0">No data</div>'}
+        <div class="ss-section-label">${ic('bat')} Top Batters
+          <div class="ss-copy-group">
+            ${copyBtn(bnId)} Names
+            ${copyBtn(brId)} Runs
+            ${copyBtn(bbId)} Balls
+          </div>
+        </div>
+        <span id="${bnId}" style="display:none">${batterNames.join('\n')}</span>
+        <span id="${brId}" style="display:none">${batterRuns.join('\n')}</span>
+        <span id="${bbId}" style="display:none">${batterBalls.join('\n')}</span>
+        ${batterRowsHtml || '<div style="color:var(--muted);font-size:13px;padding:4px 0">No data</div>'}
+
+        <div class="ss-section-label" style="margin-top:14px">${ic('zap')} Top Bowlers
+          <div class="ss-copy-group">
+            ${copyBtn(bowlId)} Names
+            ${copyBtn(bsId)} Figures
+          </div>
+        </div>
+        <span id="${bowlId}" style="display:none">${bowlerNames.join('\n')}</span>
+        <span id="${bsId}" style="display:none">${bowlerStats.join('\n')}</span>
+        ${bowlerRowsHtml || '<div style="color:var(--muted);font-size:13px;padding:4px 0">No data</div>'}
       </div>`;
   };
 
@@ -823,7 +902,19 @@ function buildScorecardSummary(d) {
     </div>` : ''}
   `;
 
-  // Re-init icons inside summary
+  // Wire up copy buttons
+  el.querySelectorAll('.ss-copy-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetId = btn.dataset.copyTarget;
+      const textEl = document.getElementById(targetId);
+      if (!textEl) return;
+      navigator.clipboard.writeText(textEl.textContent).then(() => {
+        btn.classList.add('copied');
+        setTimeout(() => btn.classList.remove('copied'), 1800);
+      });
+    });
+  });
+
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 

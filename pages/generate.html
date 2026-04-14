@@ -13,10 +13,9 @@
 <body>
   <nav class="navbar">
     <div class="nav-brand">
-    <img src="/images/cricsnap-t.png" alt="CricSnap Logo"
-      style="height: 32px; width: auto; margin-right: 8px; vertical-align: middle;">
-    <span style="vertical-align: middle;">CricSnap</span>
-  </div>
+      <i data-lucide="activity"></i>
+      <span>CricSnap</span>
+    </div>
     <div class="nav-links">
       <a href="dashboard.html" class="nav-link"><i data-lucide="layout-dashboard"></i> Dashboard</a>
       <a href="templates.html" class="nav-link"><i data-lucide="layout-template"></i> Templates</a>
@@ -53,6 +52,18 @@
             </div>
           </div>
           <img id="scorecardPreview" class="hidden scorecard-preview" />
+          <div class="top-count-selector">
+            <div class="top-count-label">
+              <i data-lucide="list-ordered"></i>
+              Show top how many batters &amp; bowlers per team?
+            </div>
+            <div class="top-count-options" id="topCountOptions">
+              <button class="top-count-btn" data-value="2" onclick="setTopCount(2)">Top 2</button>
+              <button class="top-count-btn active" data-value="3" onclick="setTopCount(3)">Top 3</button>
+              <button class="top-count-btn" data-value="4" onclick="setTopCount(4)">Top 4</button>
+            </div>
+          </div>
+
           <button class="btn-primary" id="analyzeBtn" onclick="analyzeScorecard()" disabled>
             <i data-lucide="scan-search"></i> Analyze with AI
           </button>
