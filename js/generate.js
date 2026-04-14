@@ -36,7 +36,7 @@ requireAuth((user) => {
   currentUser = user;
 });
 
-window.setTopCount = function(n) {
+window.setTopCount = function (n) {
   topCount = n;
   document.querySelectorAll('.top-count-btn').forEach(btn => {
     btn.classList.toggle('active', parseInt(btn.dataset.value) === n);
@@ -451,7 +451,7 @@ async function renderWithTemplate(canvas, ctx, template, data) {
           await ff.load();
           document.fonts.add(ff);
         }
-      } catch(e) { console.warn('Font load failed:', name); }
+      } catch (e) { console.warn('Font load failed:', name); }
     }
     await document.fonts.ready;
   }
@@ -796,7 +796,7 @@ function buildScorecardSummary(d) {
     `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${lucideIcon(name)}</svg>`;
 
   const metaItems = [
-    d.match_date  ? `<span class="ss-meta-item">${ic('calendar')} ${d.match_date}</span>` : '',
+    d.match_date ? `<span class="ss-meta-item">${ic('calendar')} ${d.match_date}</span>` : '',
     d.match_venue ? `<span class="ss-meta-item">${ic('map-pin')} ${d.match_venue}</span>` : '',
     d.toss_result ? `<span class="ss-meta-item">${ic('coins')} ${d.toss_result}</span>` : '',
   ].filter(Boolean).join('');
@@ -813,19 +813,19 @@ function buildScorecardSummary(d) {
     let batterNames = [], batterRuns = [], batterBalls = [];
     let batterRowsHtml = '';
     for (let i = 1; i <= n; i++) {
-      const name  = d[p+'batter'+i+'_name'];
-      const runs  = d[p+'batter'+i+'_runs'];
-      const balls = d[p+'batter'+i+'_balls'];
-      const notout = d[p+'batter'+i+'_notout'];
+      const name = d[p + 'batter' + i + '_name'];
+      const runs = d[p + 'batter' + i + '_runs'];
+      const balls = d[p + 'batter' + i + '_balls'];
+      const notout = d[p + 'batter' + i + '_notout'];
       if (!name) continue;
       const runsDisplay = runs ? (notout === 'true' ? runs + '*' : runs) : '—';
       batterNames.push(name);
       batterRuns.push(runsDisplay);
       batterBalls.push(balls || '—');
-      batterRowsHtml += `<div class="ss-player-row" style="--delay:${i*0.05}s">
+      batterRowsHtml += `<div class="ss-player-row" style="--delay:${i * 0.05}s">
         <span class="ss-player-name">${name}</span>
         <span class="ss-player-stat">${runsDisplay}</span>
-        <span class="ss-player-stat muted">${balls ? '('+balls+')' : ''}</span>
+        <span class="ss-player-stat muted">${balls ? '(' + balls + ')' : ''}</span>
       </div>`;
     }
 
@@ -833,32 +833,35 @@ function buildScorecardSummary(d) {
     let bowlerNames = [], bowlerStats = [];
     let bowlerRowsHtml = '';
     for (let i = 1; i <= n; i++) {
-      const name = d[p+'bowler'+i+'_name'];
-      const wkts = d[p+'bowler'+i+'_wickets'];
-      const runs = d[p+'bowler'+i+'_runs'];
-      const ovs  = d[p+'bowler'+i+'_overs'];
+      const name = d[p + 'bowler' + i + '_name'];
+      const wkts = d[p + 'bowler' + i + '_wickets'];
+      const runs = d[p + 'bowler' + i + '_runs'];
+      const ovs = d[p + 'bowler' + i + '_overs'];
       if (!name) continue;
-      const statStr = `${wkts||'0'}-${runs||'0'}${ovs ? ' ('+ovs+')' : ''}`;
+      // For display (with overs)
+      const displayStat = `${wkts || '0'}-${runs || '0'}${ovs ? ' (' + ovs + ')' : ''}`;
+      // For copying (without overs)
+      const copyStat = `${wkts || '0'}-${runs || '0'}`;
       bowlerNames.push(name);
-      bowlerStats.push(statStr);
-      bowlerRowsHtml += `<div class="ss-player-row" style="--delay:${(i+4)*0.05}s">
-        <span class="ss-player-name">${name}</span>
-        <span class="ss-player-stat wickets">${statStr}</span>
-      </div>`;
+      bowlerStats.push(copyStat); // Use copyStat for the hidden span
+      bowlerRowsHtml += `<div class="ss-player-row" style="--delay:${(i + 4) * 0.05}s">
+  <span class="ss-player-name">${name}</span>
+  <span class="ss-player-stat wickets">${displayStat}</span>
+</div>`;
     }
 
     // Unique IDs for copy targets
-    const bnId   = prefix+'-batter-names';
-    const brId   = prefix+'-batter-runs';
-    const bbId   = prefix+'-batter-balls';
-    const bowlId = prefix+'-bowler-names';
-    const bsId   = prefix+'-bowler-stats';
+    const bnId = prefix + '-batter-names';
+    const brId = prefix + '-batter-runs';
+    const bbId = prefix + '-batter-balls';
+    const bowlId = prefix + '-bowler-names';
+    const bsId = prefix + '-bowler-stats';
 
     return `
-      <div class="ss-team-row ${prefix==='team1'?'batting-first':''}">
-        <span class="ss-team-name">${d[prefix+'_name'] || label}</span>
-        <span class="ss-overs">${d[prefix+'_overs'] ? d[prefix+'_overs']+' ov' : ''}</span>
-        <span class="ss-score">${d[prefix+'_score'] || '—'}</span>
+      <div class="ss-team-row ${prefix === 'team1' ? 'batting-first' : ''}">
+        <span class="ss-team-name">${d[prefix + '_name'] || label}</span>
+        <span class="ss-overs">${d[prefix + '_overs'] ? d[prefix + '_overs'] + ' ov' : ''}</span>
+        <span class="ss-score">${d[prefix + '_score'] || '—'}</span>
       </div>
       <div class="ss-players">
         <div class="ss-section-label">${ic('bat')} Top Batters
@@ -936,7 +939,7 @@ function lucideIcon(name) {
 
 function advanceLoaderStep(step) {
   for (let i = 1; i <= 3; i++) {
-    const el = document.getElementById('lstep'+i);
+    const el = document.getElementById('lstep' + i);
     if (!el) continue;
     if (i < step) { el.classList.remove('active'); el.classList.add('done'); }
     else if (i === step) { el.classList.add('active'); el.classList.remove('done'); }
