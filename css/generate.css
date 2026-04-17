@@ -474,3 +474,20 @@
   font-size: 13px;
   font-weight: 700;
 }
+
+/* Copy buttons inside team row cells */
+.ss-team-name,
+.ss-overs,
+.ss-score {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.ss-score .ss-copy-btn {
+  font-size: 10px;
+  padding: 2px 6px;
+}
+.ss-overs .ss-copy-btn {
+  font-size: 10px;
+  padding: 2px 6px;
+}

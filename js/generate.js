@@ -30,7 +30,7 @@ let scorecardFile = null;
 let extractedData = {};
 let selectedTemplate = null;
 let userTemplates = [];
-let topCount = 2; // user-selected: 2, 3, or 4
+let topCount = 3; // user-selected: 2, 3, or 4
 
 requireAuth((user) => {
   currentUser = user;
@@ -190,12 +190,18 @@ The JSON must follow this exact structure (fill every field you can find, leave 
 
 Rules:
 - Top batters: sort by runs descending, pick top 4 per team (we may show fewer but extract all 4).
-- Top bowlers: pick from the OPPOSING team's bowling figures. Sort by wickets descending, then economy ascending. Extract top 4.
+- Top bowlers: CRITICAL SORTING — pick bowlers from the OPPOSING team's bowling table only.
+  Step 1: List ALL bowlers from that table with their wickets, runs and overs.
+  Step 2: Sort STRICTLY by wickets descending (highest wickets = rank 1). A bowler with 2 wickets MUST always rank above a bowler with 1 wicket, and 1 wicket MUST always rank above 0 wickets — no exceptions.
+  Step 3: For bowlers with the SAME wicket count, sort by economy rate ascending (runs/overs, lower = better).
+  Step 4: Pick the top 4 from this sorted list. NEVER skip a higher-wicket bowler in favour of a lower-wicket one.
+  Example: if bowlers are 2W-14R, 1W-23R, 0W-18R — the order MUST be: 2W-14R first, then 1W-23R second, then 0W-18R third.
 - notout fields: set to "true" if the batter was NOT OUT (shown as "not out" in scorecard), "false" if they were dismissed. Empty string if unclear.
 - overs fields: include full overs notation e.g. "4.0" or "3.2".
+- Player names: extract ONLY the player's name — strip any role labels such as (C), (WK), (c), (wk), captain, wicketkeeper, or any number/badge that appears beside the name.
 - Return ONLY the JSON. No text before or after.`;
 
-    updateLoaderStatus('Detecting available Gemini model...');
+    updateLoaderStatus('Detecting available Themed Edits AI model...');
 
     let rawText = '';
 
@@ -805,6 +811,17 @@ function buildScorecardSummary(d) {
   const copyBtn = (id) =>
     `<button class="ss-copy-btn" title="Copy" data-copy-target="${id}">${ic('copy')}</button>`;
 
+  // Strip role badges & junk from player names: (C), (WK), c, wk, numbers
+  const cleanName = (raw) => {
+    if (!raw) return raw;
+    return raw
+      .replace(/\s*\(\s*[CcWwKk]+\s*\)/g, '')   // (C) (WK) (c) (wk)
+      .replace(/\s*\b(c|wk|captain|wicketkeeper)\b/gi, '')  // standalone labels
+      .replace(/\s*#?\d+\s*$/, '')                // trailing numbers
+      .replace(/\s{2,}/g, ' ')                    // collapse double spaces
+      .trim();
+  };
+
   const teamBlock = (prefix, label) => {
     const p = prefix + '_';
     const n = topCount;
@@ -818,12 +835,13 @@ function buildScorecardSummary(d) {
       const balls = d[p + 'batter' + i + '_balls'];
       const notout = d[p + 'batter' + i + '_notout'];
       if (!name) continue;
+      const cleanedBatterName = cleanName(name);
       const runsDisplay = runs ? (notout === 'true' ? runs + '*' : runs) : '—';
-      batterNames.push(name);
+      batterNames.push(cleanedBatterName);
       batterRuns.push(runsDisplay);
       batterBalls.push(balls || '—');
       batterRowsHtml += `<div class="ss-player-row" style="--delay:${i * 0.05}s">
-        <span class="ss-player-name">${name}</span>
+        <span class="ss-player-name">${cleanedBatterName}</span>
         <span class="ss-player-stat">${runsDisplay}</span>
         <span class="ss-player-stat muted">${balls ? '(' + balls + ')' : ''}</span>
       </div>`;
@@ -838,30 +856,49 @@ function buildScorecardSummary(d) {
       const runs = d[p + 'bowler' + i + '_runs'];
       const ovs = d[p + 'bowler' + i + '_overs'];
       if (!name) continue;
-      // For display (with overs)
-      const displayStat = `${wkts || '0'}-${runs || '0'}${ovs ? ' (' + ovs + ')' : ''}`;
-      // For copying (without overs)
-      const copyStat = `${wkts || '0'}-${runs || '0'}`;
-      bowlerNames.push(name);
-      bowlerStats.push(copyStat); // Use copyStat for the hidden span
+      const cleanedBowlerName = cleanName(name);
+      const statStr = `${wkts || '0'}-${runs || '0'}${ovs ? ' (' + ovs + ')' : ''}`;
+      bowlerNames.push(cleanedBowlerName);
+      bowlerStats.push(statStr);
       bowlerRowsHtml += `<div class="ss-player-row" style="--delay:${(i + 4) * 0.05}s">
-  <span class="ss-player-name">${name}</span>
-  <span class="ss-player-stat wickets">${displayStat}</span>
-</div>`;
+        <span class="ss-player-name">${cleanedBowlerName}</span>
+        <span class="ss-player-stat wickets">${statStr}</span>
+      </div>`;
     }
 
     // Unique IDs for copy targets
+    const tnId = prefix + '-team-name';
+    const tsId = prefix + '-team-score';
+    const toId = prefix + '-team-overs';
     const bnId = prefix + '-batter-names';
     const brId = prefix + '-batter-runs';
     const bbId = prefix + '-batter-balls';
     const bowlId = prefix + '-bowler-names';
     const bsId = prefix + '-bowler-stats';
 
+    // Format score as runs-wickets (e.g. 127-8) for copy
+    const rawScore = d[prefix + '_score'] || '';
+    const copyScore = rawScore.replace('/', '-');
+    const copyOvers = d[prefix + '_overs'] || '';
+    const teamNameClean = d[prefix + '_name'] || label;
+
     return `
+      <span id="${tnId}" style="display:none">${teamNameClean}</span>
+      <span id="${tsId}" style="display:none">${copyScore}</span>
+      <span id="${toId}" style="display:none">${copyOvers}</span>
       <div class="ss-team-row ${prefix === 'team1' ? 'batting-first' : ''}">
-        <span class="ss-team-name">${d[prefix + '_name'] || label}</span>
-        <span class="ss-overs">${d[prefix + '_overs'] ? d[prefix + '_overs'] + ' ov' : ''}</span>
-        <span class="ss-score">${d[prefix + '_score'] || '—'}</span>
+        <span class="ss-team-name">
+          ${teamNameClean}
+          ${copyBtn(tnId)}
+        </span>
+        <span class="ss-overs">
+          ${d[prefix + '_overs'] ? d[prefix + '_overs'] + ' ov' : ''}
+          ${d[prefix + '_overs'] ? copyBtn(toId) : ''}
+        </span>
+        <span class="ss-score">
+          ${d[prefix + '_score'] || '—'}
+          ${d[prefix + '_score'] ? copyBtn(tsId) : ''}
+        </span>
       </div>
       <div class="ss-players">
         <div class="ss-section-label">${ic('bat')} Top Batters
