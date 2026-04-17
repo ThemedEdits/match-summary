@@ -30,7 +30,7 @@ let scorecardFile = null;
 let extractedData = {};
 let selectedTemplate = null;
 let userTemplates = [];
-let topCount = 3; // user-selected: 2, 3, or 4
+let topCount = 2; // user-selected: 2, 3, or 4
 
 requireAuth((user) => {
   currentUser = user;
