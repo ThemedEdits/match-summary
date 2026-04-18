@@ -36,7 +36,7 @@ requireAuth((user) => {
   currentUser = user;
 });
 
-window.setTopCount = function (n) {
+window.setTopCount = function(n) {
   topCount = n;
   document.querySelectorAll('.top-count-btn').forEach(btn => {
     btn.classList.toggle('active', parseInt(btn.dataset.value) === n);
@@ -188,20 +188,22 @@ The JSON must follow this exact structure (fill every field you can find, leave 
   "team2_bowler4_overs": ""
 }
 
-Rules:
-- Top batters: sort by runs descending, pick top 4 per team (we may show fewer but extract all 4).
-- Top bowlers: CRITICAL SORTING — pick bowlers from the OPPOSING team's bowling table only.
-  Step 1: List ALL bowlers from that table with their wickets, runs and overs.
-  Step 2: Sort STRICTLY by wickets descending (highest wickets = rank 1). A bowler with 2 wickets MUST always rank above a bowler with 1 wicket, and 1 wicket MUST always rank above 0 wickets — no exceptions.
-  Step 3: For bowlers with the SAME wicket count, sort by economy rate ascending (runs/overs, lower = better).
-  Step 4: Pick the top 4 from this sorted list. NEVER skip a higher-wicket bowler in favour of a lower-wicket one.
-  Example: if bowlers are 2W-14R, 1W-23R, 0W-18R — the order MUST be: 2W-14R first, then 1W-23R second, then 0W-18R third.
-- notout fields: set to "true" if the batter was NOT OUT (shown as "not out" in scorecard), "false" if they were dismissed. Empty string if unclear.
-- overs fields: include full overs notation e.g. "4.0" or "3.2".
-- Player names: extract ONLY the player's name — strip any role labels such as (C), (WK), (c), (wk), captain, wicketkeeper, or any number/badge that appears beside the name.
+BOWLING SORT INSTRUCTIONS — follow this algorithm exactly, do not deviate:
+For EACH team's bowling section (the bowlers who bowled against that team):
+  1. Write out every single bowler row you see in the image as: NAME | W | R | Overs
+  2. Assign a sort key to each: primary = wickets (integer, descending), secondary = economy (R/Overs, ascending, lower is better)
+  3. Rank them 1 to N using those keys. The bowler with the MOST wickets is always rank 1. If two bowlers have equal wickets, the one with lower economy is ranked higher.
+  4. Place rank-1 bowler into bowler1 fields, rank-2 into bowler2 fields, etc.
+  ABSOLUTE RULE: A bowler with MORE wickets must ALWAYS appear before a bowler with FEWER wickets, regardless of runs or economy. 3W always beats 2W. 2W always beats 1W. 1W always beats 0W. No exception.
+
+Other rules:
+- Top batters: sort by runs descending, pick top 4 per team.
+- notout fields: "true" if batter was NOT OUT, "false" if dismissed.
+- overs: full notation e.g. "4.0" or "3.2".
+- Names: extract ONLY the player's name. Strip (C), (WK), (c), (wk), captain, wicketkeeper, or any badge/number beside the name.
 - Return ONLY the JSON. No text before or after.`;
 
-    updateLoaderStatus('Detecting available Themed Edits AI model...');
+    updateLoaderStatus('Detecting available Gemini model...');
 
     let rawText = '';
 
@@ -457,7 +459,7 @@ async function renderWithTemplate(canvas, ctx, template, data) {
           await ff.load();
           document.fonts.add(ff);
         }
-      } catch (e) { console.warn('Font load failed:', name); }
+      } catch(e) { console.warn('Font load failed:', name); }
     }
     await document.fonts.ready;
   }
@@ -802,7 +804,7 @@ function buildScorecardSummary(d) {
     `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${lucideIcon(name)}</svg>`;
 
   const metaItems = [
-    d.match_date ? `<span class="ss-meta-item">${ic('calendar')} ${d.match_date}</span>` : '',
+    d.match_date  ? `<span class="ss-meta-item">${ic('calendar')} ${d.match_date}</span>` : '',
     d.match_venue ? `<span class="ss-meta-item">${ic('map-pin')} ${d.match_venue}</span>` : '',
     d.toss_result ? `<span class="ss-meta-item">${ic('coins')} ${d.toss_result}</span>` : '',
   ].filter(Boolean).join('');
@@ -830,20 +832,20 @@ function buildScorecardSummary(d) {
     let batterNames = [], batterRuns = [], batterBalls = [];
     let batterRowsHtml = '';
     for (let i = 1; i <= n; i++) {
-      const name = d[p + 'batter' + i + '_name'];
-      const runs = d[p + 'batter' + i + '_runs'];
-      const balls = d[p + 'batter' + i + '_balls'];
-      const notout = d[p + 'batter' + i + '_notout'];
+      const name  = d[p+'batter'+i+'_name'];
+      const runs  = d[p+'batter'+i+'_runs'];
+      const balls = d[p+'batter'+i+'_balls'];
+      const notout = d[p+'batter'+i+'_notout'];
       if (!name) continue;
       const cleanedBatterName = cleanName(name);
       const runsDisplay = runs ? (notout === 'true' ? runs + '*' : runs) : '—';
       batterNames.push(cleanedBatterName);
       batterRuns.push(runsDisplay);
       batterBalls.push(balls || '—');
-      batterRowsHtml += `<div class="ss-player-row" style="--delay:${i * 0.05}s">
+      batterRowsHtml += `<div class="ss-player-row" style="--delay:${i*0.05}s">
         <span class="ss-player-name">${cleanedBatterName}</span>
         <span class="ss-player-stat">${runsDisplay}</span>
-        <span class="ss-player-stat muted">${balls ? '(' + balls + ')' : ''}</span>
+        <span class="ss-player-stat muted">${balls ? '('+balls+')' : ''}</span>
       </div>`;
     }
 
@@ -851,54 +853,36 @@ function buildScorecardSummary(d) {
     let bowlerNames = [], bowlerStats = [];
     let bowlerRowsHtml = '';
     for (let i = 1; i <= n; i++) {
-      const name = d[p + 'bowler' + i + '_name'];
-      const wkts = d[p + 'bowler' + i + '_wickets'];
-      const runs = d[p + 'bowler' + i + '_runs'];
-      const ovs = d[p + 'bowler' + i + '_overs'];
+      const name = d[p+'bowler'+i+'_name'];
+      const wkts = d[p+'bowler'+i+'_wickets'];
+      const runs = d[p+'bowler'+i+'_runs'];
+      const ovs  = d[p+'bowler'+i+'_overs'];
       if (!name) continue;
       const cleanedBowlerName = cleanName(name);
-      const statStr = `${wkts || '0'}-${runs || '0'}${ovs ? ' (' + ovs + ')' : ''}`;
+      const displayStat = `${wkts||'0'}-${runs||'0'}${ovs ? ' ('+ovs+')' : ''}`;
+      const copyStat = `${wkts||'0'}-${runs||'0'}`; // no overs in clipboard
       bowlerNames.push(cleanedBowlerName);
-      bowlerStats.push(statStr);
-      bowlerRowsHtml += `<div class="ss-player-row" style="--delay:${(i + 4) * 0.05}s">
+      bowlerStats.push(copyStat);
+      bowlerRowsHtml += `<div class="ss-player-row" style="--delay:${(i+4)*0.05}s">
         <span class="ss-player-name">${cleanedBowlerName}</span>
-        <span class="ss-player-stat wickets">${statStr}</span>
+        <span class="ss-player-stat wickets">${displayStat}</span>
       </div>`;
     }
 
-    // Unique IDs for copy targets
-    const tnId = prefix + '-team-name';
-    const tsId = prefix + '-team-score';
-    const toId = prefix + '-team-overs';
-    const bnId = prefix + '-batter-names';
-    const brId = prefix + '-batter-runs';
-    const bbId = prefix + '-batter-balls';
-    const bowlId = prefix + '-bowler-names';
-    const bsId = prefix + '-bowler-stats';
+    // Unique IDs for copy targets (per-team batter/bowler only)
+    const bnId   = prefix+'-batter-names';
+    const brId   = prefix+'-batter-runs';
+    const bbId   = prefix+'-batter-balls';
+    const bowlId = prefix+'-bowler-names';
+    const bsId   = prefix+'-bowler-stats';
 
-    // Format score as runs-wickets (e.g. 127-8) for copy
-    const rawScore = d[prefix + '_score'] || '';
-    const copyScore = rawScore.replace('/', '-');
-    const copyOvers = d[prefix + '_overs'] || '';
-    const teamNameClean = d[prefix + '_name'] || label;
+    const teamNameClean = d[prefix+'_name'] || label;
 
     return `
-      <span id="${tnId}" style="display:none">${teamNameClean}</span>
-      <span id="${tsId}" style="display:none">${copyScore}</span>
-      <span id="${toId}" style="display:none">${copyOvers}</span>
-      <div class="ss-team-row ${prefix === 'team1' ? 'batting-first' : ''}">
-        <span class="ss-team-name">
-          ${teamNameClean}
-          ${copyBtn(tnId)}
-        </span>
-        <span class="ss-overs">
-          ${d[prefix + '_overs'] ? d[prefix + '_overs'] + ' ov' : ''}
-          ${d[prefix + '_overs'] ? copyBtn(toId) : ''}
-        </span>
-        <span class="ss-score">
-          ${d[prefix + '_score'] || '—'}
-          ${d[prefix + '_score'] ? copyBtn(tsId) : ''}
-        </span>
+      <div class="ss-team-row ${prefix==='team1'?'batting-first':''}">
+        <span class="ss-team-name">${teamNameClean}</span>
+        <span class="ss-overs">${d[prefix+'_overs'] ? d[prefix+'_overs']+' ov' : ''}</span>
+        <span class="ss-score">${d[prefix+'_score'] || '—'}</span>
       </div>
       <div class="ss-players">
         <div class="ss-section-label">${ic('bat')} Top Batters
@@ -925,7 +909,21 @@ function buildScorecardSummary(d) {
       </div>`;
   };
 
+  // Build both-team combined copy values
+  const t1Name = d['team1_name'] || 'Team 1';
+  const t2Name = d['team2_name'] || 'Team 2';
+  const t1Score = (d['team1_score'] || '').replace('/', '-');
+  const t2Score = (d['team2_score'] || '').replace('/', '-');
+  const t1Overs = d['team1_overs'] || '';
+  const t2Overs = d['team2_overs'] || '';
+
   el.innerHTML = `
+    <span id="both-team-names" style="display:none">${t1Name}
+${t2Name}</span>
+    <span id="both-team-scores" style="display:none">${t1Score}
+${t2Score}</span>
+    <span id="both-team-overs" style="display:none">${t1Overs}
+${t2Overs}</span>
     <div class="ss-header">
       <div class="ss-tournament">${d.match_title || 'Match Summary'}</div>
       ${metaItems ? `<div class="ss-meta">${metaItems}</div>` : ''}
@@ -934,6 +932,11 @@ function buildScorecardSummary(d) {
       ${teamBlock('team1', 'Team 1')}
       <div class="ss-divider"></div>
       ${teamBlock('team2', 'Team 2')}
+    </div>
+    <div class="ss-both-copy-row">
+      ${copyBtn('both-team-names')} Both Team Names
+      ${copyBtn('both-team-scores')} Both Scores
+      ${copyBtn('both-team-overs')} Both Overs
     </div>
     ${d.match_result ? `
     <div class="ss-result">
@@ -976,7 +979,7 @@ function lucideIcon(name) {
 
 function advanceLoaderStep(step) {
   for (let i = 1; i <= 3; i++) {
-    const el = document.getElementById('lstep' + i);
+    const el = document.getElementById('lstep'+i);
     if (!el) continue;
     if (i < step) { el.classList.remove('active'); el.classList.add('done'); }
     else if (i === step) { el.classList.add('active'); el.classList.remove('done'); }
