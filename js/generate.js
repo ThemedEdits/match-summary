@@ -877,10 +877,18 @@ function buildScorecardSummary(d) {
     const bsId   = prefix+'-bowler-stats';
 
     const teamNameClean = d[prefix+'_name'] || label;
+    const isTeam1 = prefix === 'team1';
 
     return `
-      <div class="ss-team-row ${prefix==='team1'?'batting-first':''}">
-        <span class="ss-team-name">${teamNameClean}</span>
+      <div class="ss-team-row ${isTeam1?'batting-first':''}">
+        <span class="ss-team-name">
+          ${teamNameClean}
+          ${isTeam1 ? `<span class="ss-inline-copy-group">
+            ${copyBtn('both-team-names')} Names
+            ${copyBtn('both-team-scores')} Scores
+            ${copyBtn('both-team-overs')} Overs
+          </span>` : ''}
+        </span>
         <span class="ss-overs">${d[prefix+'_overs'] ? d[prefix+'_overs']+' ov' : ''}</span>
         <span class="ss-score">${d[prefix+'_score'] || '—'}</span>
       </div>
@@ -933,15 +941,12 @@ ${t2Overs}</span>
       <div class="ss-divider"></div>
       ${teamBlock('team2', 'Team 2')}
     </div>
-    <div class="ss-both-copy-row">
-      ${copyBtn('both-team-names')} Both Team Names
-      ${copyBtn('both-team-scores')} Both Scores
-      ${copyBtn('both-team-overs')} Both Overs
-    </div>
     ${d.match_result ? `
+    <span id="copy-match-result" style="display:none">${d.match_result || ''}</span>
+    <span id="copy-mom" style="display:none">${(d.man_of_match || '').split('(')[0].trim()}</span>
     <div class="ss-result">
-      <div class="ss-result-text">${ic('trophy')} ${d.match_result}</div>
-      ${d.man_of_match ? `<div class="ss-mom">${ic('award')} Player of Match: <strong>${d.man_of_match}</strong></div>` : ''}
+      <div class="ss-result-text">${ic('trophy')} ${d.match_result} ${copyBtn('copy-match-result')}</div>
+      ${d.man_of_match ? `<div class="ss-mom">${ic('award')} Player of Match: <strong>${d.man_of_match.split('(')[0].trim()}</strong> ${copyBtn('copy-mom')}</div>` : ''}
     </div>` : ''}
   `;
 

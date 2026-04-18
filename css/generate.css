@@ -127,6 +127,10 @@
   font-size: 20px;
   letter-spacing: 0.3px;
   color: var(--text);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
 }
 .ss-overs {
   font-size: 12px;
@@ -475,32 +479,13 @@
   font-weight: 700;
 }
 
-/* Copy buttons inside team row cells */
-.ss-team-name,
-.ss-overs,
-.ss-score {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-.ss-score .ss-copy-btn {
-  font-size: 10px;
-  padding: 2px 6px;
-}
-.ss-overs .ss-copy-btn {
-  font-size: 10px;
-  padding: 2px 6px;
-}
 
-/* Both-team copy row */
-.ss-both-copy-row {
-  display: flex;
+
+/* Inline copy group inside team1 name cell */
+.ss-inline-copy-group {
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 20px;
-  background: rgba(0,200,83,0.03);
-  border-top: 1px solid var(--border);
-  font-size: 12px;
-  color: var(--muted);
+  gap: 4px;
+  margin-left: 6px;
   flex-wrap: wrap;
 }
