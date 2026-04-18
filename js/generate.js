@@ -120,7 +120,7 @@ The JSON must follow this exact structure (fill every field you can find, leave 
   "team1_score": "runs/wickets e.g. 127/8",
   "team1_overs": "overs e.g. 20.0",
   "team1_batter1_name": "top run scorer name",
-  "team1_batter1_runs": "runs as number only",
+  "team1_batter1_runs": "runs scored. If batter is NOT OUT append * e.g. 42*. If out, just the number e.g. 42",
   "team1_batter1_balls": "balls faced as number only",
   "team1_batter1_notout": "true if not out, false if out",
   "team1_batter2_name": "2nd top run scorer",
@@ -155,7 +155,7 @@ The JSON must follow this exact structure (fill every field you can find, leave 
   "team2_score": "runs/wickets",
   "team2_overs": "overs",
   "team2_batter1_name": "top run scorer",
-  "team2_batter1_runs": "",
+  "team2_batter1_runs": "runs scored. If NOT OUT append * e.g. 51*. If out just number.",
   "team2_batter1_balls": "",
   "team2_batter1_notout": "true if not out, false if out",
   "team2_batter2_name": "",
@@ -198,7 +198,10 @@ For EACH team's bowling section (the bowlers who bowled against that team):
 
 Other rules:
 - Top batters: sort by runs descending, pick top 4 per team.
-- notout fields: You MUST check if each batter's dismissal column says "not out". If it does, set the notout field to the string "true". If they were dismissed (caught, bowled, lbw, run out, etc.), set it to "false". This is critical — check every single batter carefully.
+- NOT OUT detection — CRITICAL: Look at EVERY batter's how_out / dismissal column in the scorecard.
+  If it says "not out" → put the runs with an asterisk in the runs field e.g. "42*" AND set notout to "true".
+  If dismissed (caught/bowled/lbw/run out/stumped/hit wicket etc.) → put just the number e.g. "42" and set notout to "false".
+  Do this for EVERY batter on BOTH teams without exception. The asterisk in runs is mandatory for not-out batters.
 - overs: full notation e.g. "4.0" or "3.2".
 - Names: extract ONLY the player's name. Strip (C), (WK), (c), (wk), captain, wicketkeeper, or any badge/number beside the name.
 - Return ONLY the JSON. No text before or after.`;
@@ -838,9 +841,13 @@ function buildScorecardSummary(d) {
       const notout = d[p+'batter'+i+'_notout'];
       if (!name) continue;
       const cleanedBatterName = cleanName(name);
-      // Handle all variants the AI might return: "true", true, "not out", "notout", "1", "yes", "*"
-      const isNotOut = notout === true || String(notout).toLowerCase().trim().match(/^(true|not\s*out|notout|1|yes)$/);
-      const runsDisplay = runs ? (isNotOut ? runs + '*' : runs) : '—';
+      // Detect not-out from EITHER the notout field OR an asterisk already in runs
+      const runsHasStar = String(runs || '').includes('*');
+      const notoutFlag = notout === true || String(notout).toLowerCase().trim().match(/^(true|not\s*out|notout|1|yes)$/);
+      const isNotOut = runsHasStar || notoutFlag;
+      // Strip any existing * from runs before re-adding, to avoid "42**"
+      const cleanRuns = String(runs || '').replace(/\*/g, '').trim();
+      const runsDisplay = cleanRuns ? (isNotOut ? cleanRuns + '*' : cleanRuns) : '—';
       batterNames.push(cleanedBatterName);
       batterRuns.push(runsDisplay);
       batterBalls.push(balls || '—');
