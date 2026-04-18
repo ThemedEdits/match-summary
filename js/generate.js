@@ -198,7 +198,7 @@ For EACH team's bowling section (the bowlers who bowled against that team):
 
 Other rules:
 - Top batters: sort by runs descending, pick top 4 per team.
-- notout fields: "true" if batter was NOT OUT, "false" if dismissed.
+- notout fields: You MUST check if each batter's dismissal column says "not out". If it does, set the notout field to the string "true". If they were dismissed (caught, bowled, lbw, run out, etc.), set it to "false". This is critical — check every single batter carefully.
 - overs: full notation e.g. "4.0" or "3.2".
 - Names: extract ONLY the player's name. Strip (C), (WK), (c), (wk), captain, wicketkeeper, or any badge/number beside the name.
 - Return ONLY the JSON. No text before or after.`;
@@ -838,7 +838,9 @@ function buildScorecardSummary(d) {
       const notout = d[p+'batter'+i+'_notout'];
       if (!name) continue;
       const cleanedBatterName = cleanName(name);
-      const runsDisplay = runs ? (notout === 'true' ? runs + '*' : runs) : '—';
+      // Handle all variants the AI might return: "true", true, "not out", "notout", "1", "yes", "*"
+      const isNotOut = notout === true || String(notout).toLowerCase().trim().match(/^(true|not\s*out|notout|1|yes)$/);
+      const runsDisplay = runs ? (isNotOut ? runs + '*' : runs) : '—';
       batterNames.push(cleanedBatterName);
       batterRuns.push(runsDisplay);
       batterBalls.push(balls || '—');
